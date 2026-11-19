@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STREETONE | ONE SHOT PHOTOGRAPH — Fotografía Urbana & Automotriz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0b0b0c;
+      --bg-secondary: #141416;
+      --charcoal: #1c1c1f;
+      --accent-color: #f2b705;
+      --text-primary: #f7f6f3;
+      --text-muted: #cfcdc7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Jost', sans-serif;
+      overflow-x: hidden;
+      margin: 0;
+    }
+    .font-display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; }
+    .accent-text { color: var(--accent-color); }
+    .accent-bg { background-color: var(--accent-color); color: #0b0b0c; }
+
+    .logo-aperture { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+    .logo-blade {
+      position: absolute; inset: 0; border: 2px solid var(--accent-color);
+      border-radius: 3px; transform-origin: center;
+      transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .logo-blade:nth-child(1) { transform: rotate(0deg) scale(0.62); }
+    .logo-blade:nth-child(2) { transform: rotate(60deg) scale(0.62); }
+    .logo-blade:nth-child(3) { transform: rotate(120deg) scale(0.62); }
+    .logo-blade:nth-child(4) { transform: rotate(30deg) scale(0.86); opacity: 0.55; }
+    .logo-blade:nth-child(5) { transform: rotate(90deg) scale(0.86); opacity: 0.55; }
+    .logo-blade:nth-child(6) { transform: rotate(150deg) scale(0.86); opacity: 0.55; }
+
+    .secret-logo-trigger:hover .logo-blade { transform: rotate(180deg) scale(0.52); }
+    .secret-logo-trigger { user-select: none; cursor: pointer; }
+
+    .viewfinder-card {
+      position: relative; overflow: hidden; background-color: var(--charcoal);
+      border: 1px solid rgba(247, 246, 243, 0.08);
+      transition: transform 0.4s ease, border-color 0.4s ease;
+    }
+    .viewfinder-card:hover { border-color: var(--accent-color); transform: translateY(-4px); }
+    .viewfinder-corner {
+      position: absolute; top: 14px; right: 14px; width: 20px; height: 20px;
+      border-top: 2px solid var(--accent-color); border-right: 2px solid var(--accent-color);
+      opacity: 0; transition: opacity 0.3s ease; z-index: 15; pointer-events: none;
+    }
+    .viewfinder-card:hover .viewfinder-corner { opacity: 1; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeSlideUp 0.4s ease forwards; }
+
+    .category-carousel-viewport {
+      position: relative;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+    }
+    .category-carousel-viewport::-webkit-scrollbar { display: none; }
+    .category-carousel-track {
+      display: flex;
+      gap: 1.5rem;
+      width: max-content;
+      padding: 0.5rem 0.25rem 1rem 0.25rem;
+    }
+    .carousel-slide-card {
+      width: 280px;
+      flex-shrink: 0;
+      animation: slideZoomIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @media (min-width: 640px) { .carousel-slide-card { width: 320px; } }
+    @media (min-width: 1024px) { .carousel-slide-card { width: 350px; } }
+    @keyframes slideZoomIn {
+      from { opacity: 0; transform: scale(0.94) translateX(24px); }
+      to { opacity: 1; transform: scale(1) translateX(0); }
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-[#f2b705] selection:text-[#0b0b0c]">
+
+  <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none px-4"></div>
+
+  <!-- MODAL DE CONFIRMACIÓN -->
+  <div id="confirmModal" class="fixed inset-0 z-[9998] hidden items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+    <div class="bg-[#141416] border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl animate-fade-up">
+      <h3 id="confirmTitle" class="font-display text-2xl tracking-wider text-white mb-2">Confirmar Acción</h3>
+      <p id="confirmMessage" class="text-zinc-400 text-sm leading-relaxed mb-6">¿Estás seguro?</p>
+      <div class="flex justify-end gap-3">
+        <button id="confirmCancelBtn" type="button" class="px-4 py-2.5 rounded-xl bg-zinc-800 text-zinc-200 text-sm">Cancelar</button>
+        <button id="confirmAcceptBtn" type="button" class="px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE DE NOTIFICACIÓN -->
+  <div id="inquiryDetailModal" class="fixed inset-0 z-[9996] hidden items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+    <div class="bg-[#141416] border border-zinc-800 rounded-2xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-2xl animate-fade-up">
+      <div class="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
+        <div>
+          <span id="inqDetailStatusBadge" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1.5"></span>
+          <h3 id="inqDetailName" class="font-display text-3xl text-white"></h3>
+          <p id="inqDetailDateReceived" class="text-xs text-zinc-400"></p>
+        </div>
+        <button id="closeInqDetailBtn" type="button" class="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="bg-[#0b0b0c] p-3.5 rounded-xl border border-zinc-800/80">
+          <span class="text-zinc-500 uppercase block mb-1">Teléfono / WhatsApp</span>
+          <span id="inqDetailPhone" class="text-white font-semibold text-sm"></span>
+        </div>
+        <div class="bg-[#0b0b0c] p-3.5 rounded-xl border border-zinc-800/80">
+          <span class="text-zinc-500 uppercase block mb-1">Correo Electrónico</span>
+          <span id="inqDetailEmail" class="text-white font-semibold text-sm break-all"></span>
+        </div>
+        <div class="bg-[#0b0b0c] p-3.5 rounded-xl border border-zinc-800/80">
+          <span class="text-zinc-500 uppercase block mb-1">Servicio Solicitado</span>
+          <span id="inqDetailService" class="accent-text font-semibold text-sm"></span>
+        </div>
+        <div class="bg-[#0b0b0c] p-3.5 rounded-xl border border-zinc-800/80">
+          <span class="text-zinc-500 uppercase block mb-1">Fecha de Interés</span>
+          <span id="inqDetailEventDate" class="text-white font-semibold text-sm"></span>
+        </div>
+      </div>
+
+      <div class="bg-[#0b0b0c] p-4 rounded-xl border border-zinc-800/80">
+        <span class="text-[11px] text-zinc-500 uppercase block mb-1.5">Mensaje del Cliente</span>
+        <p id="inqDetailMessage" class="text-zinc-200 text-sm leading-relaxed whitespace-pre-line"></p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <a id="inqReplyWhatsappBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white text-xs font-bold uppercase tracking-wider transition">Responder por WhatsApp</a>
+        <div class="flex gap-2">
+          <button id="inqToggleReadBtn" type="button" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-[#f2b705] hover:text-[#0b0b0c] text-xs font-bold uppercase tracking-wider transition"></button>
+          <button id="inqDeleteBtn" type="button" class="px-4 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-bold uppercase tracking-wider transition">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE EDICIÓN DE FOTO -->
+  <div id="editPhotoModal" class="fixed inset-0 z-[9995] hidden items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+    <div class="bg-[#141416] border border-zinc-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-fade-up">
+      <h3 class="font-display text-2xl text-white">Editar Fotografía</h3>
+      <input type="hidden" id="editPhotoId" />
+      <div>
+        <label class="block text-xs uppercase text-zinc-400 mb-1">Título</label>
+        <input id="editPhotoTitle" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs uppercase text-zinc-400 mb-1">Categoría</label>
+          <select id="editPhotoCategory" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white"></select>
+        </div>
+        <div>
+          <label class="block text-xs uppercase text-zinc-400 mb-1">Ubicación</label>
+          <input id="editPhotoLocation" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs uppercase text-zinc-400 mb-1">Descripción / Notas</label>
+        <textarea id="editPhotoDesc" rows="3" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white"></textarea>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button id="cancelEditPhotoBtn" type="button" class="px-4 py-2.5 rounded-xl bg-zinc-800 text-zinc-200 text-sm">Cancelar</button>
+        <button id="saveEditPhotoBtn" type="button" class="px-5 py-2.5 rounded-xl accent-bg font-bold text-xs uppercase">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL AUTENTICACIÓN ADMIN -->
+  <div id="authModal" class="fixed inset-0 z-[9990] hidden items-center justify-center bg-black/90 backdrop-blur-md p-4">
+    <div class="bg-[#141416] border border-zinc-800 rounded-2xl max-w-md w-full p-7 relative shadow-2xl animate-fade-up">
+      <button id="closeAuthModalBtn" class="absolute top-5 right-5 text-zinc-400 hover:text-white text-lg">✕</button>
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-11 h-11 rounded-xl accent-bg flex items-center justify-center font-display text-2xl font-bold">S1</div>
+        <div>
+          <span class="text-[11px] uppercase tracking-[0.2em] accent-text font-semibold">STREETONE | ONE SHOT</span>
+          <h2 class="font-display text-3xl text-white">ACCESO ADMINISTRADOR</h2>
+        </div>
+      </div>
+
+      <div id="authCheckingState" class="py-6 text-center hidden">
+        <div class="w-8 h-8 border-2 border-[#f2b705] border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-xs text-zinc-400 mt-3 uppercase tracking-widest">Verificando acceso...</p>
+      </div>
+
+      <form id="registerAdminForm" class="hidden space-y-4">
+        <div class="p-3.5 rounded-xl bg-[#f2b705]/10 border border-[#f2b705]/30 text-xs text-zinc-200">
+          <strong>Registro Inicial:</strong> Crea tu cuenta administrativa para gestionar el portafolio.
+        </div>
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Nombre del Administrador *</label>
+          <input id="regAdminName" type="text" placeholder="Ej: Gerald Sánchez" required minlength="2" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Correo Electrónico *</label>
+          <input id="regAdminEmail" type="email" placeholder="admin@streetone.com" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Contraseña Maestra *</label>
+          <input id="regAdminPassword" type="password" placeholder="Mínimo 6 caracteres" required minlength="6" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
+        </div>
+        <p id="regErrorMsg" class="text-red-400 text-xs hidden bg-red-950/40 border border-red-800/60 p-3 rounded-xl"></p>
+        <button id="regSubmitBtn" type="submit" class="w-full py-3.5 rounded-xl accent-bg font-bold text-xs uppercase tracking-wider">Registrar Administrador</button>
+      </form>
+
+      <form id="loginAdminForm" class="hidden space-y-4">
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Correo Electrónico *</label>
+          <input id="loginAdminEmail" type="email" placeholder="admin@streetone.com" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Contraseña *</label>
+          <input id="loginAdminPassword" type="password" placeholder="••••••••" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
+        </div>
+        <p id="loginErrorMsg" class="text-red-400 text-xs hidden bg-red-950/40 border border-red-800/60 p-3 rounded-xl"></p>
+        <button id="loginSubmitBtn" type="submit" class="w-full py-3.5 rounded-xl accent-bg font-bold text-xs uppercase tracking-wider">Iniciar Sesión</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- STUDIO DASHBOARD COMPLETO -->
+  <div id="adminDashboard" class="fixed inset-0 z-[9900] hidden bg-[#09090b] text-white flex-col lg:flex-row overflow-hidden">
+    <aside class="w-full lg:w-72 bg-[#111114] border-b lg:border-b-0 lg:border-r border-zinc-800 flex flex-col shrink-0">
+      <div class="p-5 flex items-center justify-between border-b border-zinc-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl accent-bg flex items-center justify-center font-display text-2xl font-bold">S1</div>
+          <div>
+            <span class="font-display text-lg text-white leading-tight block">STREETONE | ONE SHOT</span>
+            <p id="adminStorageModeLabel" class="text-xs text-emerald-400">Studio Activo</p>
+          </div>
+        </div>
+        <button id="minimizeAdminBtn" class="lg:hidden px-3 py-1.5 bg-zinc-800 text-xs rounded-lg">Ver Web</button>
+      </div>
+
+      <nav class="flex lg:flex-col gap-1.5 p-3 overflow-x-auto lg:overflow-y-auto flex-1">
+        <button type="button" data-admin-tab="notifications" class="admin-nav-btn flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-[#f2b705] text-[#0b0b0c]">
+          <span>0. Notificaciones & Citas</span>
+          <span id="sidebarUnreadBadge" class="hidden px-2 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-bold">0</span>
+        </button>
+        <button type="button" data-admin-tab="upload" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">1. Subir Fotos & Detalles</button>
+        <button type="button" data-admin-tab="gallery" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">2. Galería & Categorías</button>
+        <button type="button" data-admin-tab="texts" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">3. Textos & Perfil</button>
+        <button type="button" data-admin-tab="contact" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">4. Contacto & Redes</button>
+        <button type="button" data-admin-tab="appearance" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">5. Apariencia</button>
+      </nav>
+
+      <div class="p-4 border-t border-zinc-800 flex lg:flex-col gap-2">
+        <button id="minimizeAdminBtnDesktop" class="hidden lg:flex w-full items-center justify-center py-2.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold uppercase tracking-wider rounded-xl">Vista Previa Web</button>
+        <button id="logoutAdminBtn" class="w-full py-2.5 bg-red-500/20 text-red-400 text-xs font-semibold uppercase tracking-wider rounded-xl hover:bg-red-600 hover:text-white transition">Cerrar Sesión</button>
+      </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-5 sm:p-8 lg:p-10 space-y-8">
+      <!-- MÓDULO 0: NOTIFICACIONES -->
+      <section id="tab-notifications" class="admin-tab-panel max-w-5xl mx-auto space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Bandeja de Entrada en Tiempo Real</span>
+            <h2 class="font-display text-3xl sm:text-4xl text-white mt-0.5">Notificaciones & Consultas</h2>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="bg-[#141416] border border-zinc-800 px-4 py-2 rounded-xl text-xs">
+              Pendientes: <span id="pendingCountHeader" class="font-bold text-red-400 text-sm">0</span>
+            </div>
+            <div class="bg-[#141416] border border-zinc-800 px-4 py-2 rounded-xl text-xs">
+              Total: <span id="totalInquiriesHeader" class="font-bold text-white text-sm">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button type="button" data-inq-filter="ALL" class="inq-filter-btn px-4 py-2 rounded-xl text-xs font-bold uppercase accent-bg">Todas</button>
+          <button type="button" data-inq-filter="UNREAD" class="inq-filter-btn px-4 py-2 rounded-xl text-xs font-bold uppercase bg-zinc-800 text-zinc-300">Pendientes / Nuevas</button>
+          <button type="button" data-inq-filter="READ" class="inq-filter-btn px-4 py-2 rounded-xl text-xs font-bold uppercase bg-zinc-800 text-zinc-300">Leídas</button>
+        </div>
+
+        <div id="adminInquiriesList" class="space-y-3"></div>
+      </section>
+
+      <!-- MÓDULO 1: SUBIR FOTOS -->
+      <section id="tab-upload" class="admin-tab-panel hidden max-w-5xl mx-auto space-y-6">
+        <div>
+          <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Gestión de Portafolio</span>
+          <h2 class="font-display text-3xl sm:text-4xl text-white mt-0.5">Subir Fotografías & Detalles</h2>
+        </div>
+
+        <div id="batchDropZone" class="border-2 border-dashed border-zinc-700 hover:border-[#f2b705] bg-[#141416] rounded-2xl p-8 text-center cursor-pointer transition">
+          <input id="batchFileInput" type="file" accept="image/*" multiple class="hidden" />
+          <h3 class="font-display text-2xl text-white">Arrastra tus fotografías aquí o haz clic</h3>
+          <p class="text-zinc-400 text-sm mt-1">Se optimizan automáticamente para cargarse rápido en la web</p>
+          <span class="inline-block mt-4 px-5 py-2.5 rounded-xl accent-bg text-xs font-bold uppercase tracking-wider">Examinar Archivos</span>
+        </div>
+
+        <div id="batchControlsBar" class="hidden space-y-6">
+          <div class="bg-[#141416] p-5 rounded-2xl border border-zinc-800 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-zinc-800 pb-4">
+              <div>
+                <h3 class="font-display text-xl text-white">Configuración de Lote</h3>
+                <p id="batchQueueCountLabel" class="text-xs text-zinc-400">0 fotos listas</p>
+              </div>
+              <button id="publishBatchBtn" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 transition">Publicar Ahora</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-[#0b0b0c] p-4 rounded-xl border border-zinc-800/90">
+              <div class="md:col-span-4">
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Nombre en Conjunto</label>
+                <input id="bulkTitleInput" type="text" placeholder="Ej: Car Meet San Juan" class="w-full px-3.5 py-2 rounded-xl bg-[#141416] border border-zinc-800 text-sm text-white" />
+              </div>
+              <div class="md:col-span-3">
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Categoría en Conjunto</label>
+                <select id="bulkCategorySelect" class="w-full px-3.5 py-2 rounded-xl bg-[#141416] border border-zinc-800 text-sm text-white"></select>
+              </div>
+              <div class="md:col-span-5">
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Descripción en Conjunto</label>
+                <input id="bulkDescInput" type="text" placeholder="Descripción compartida..." class="w-full px-3.5 py-2 rounded-xl bg-[#141416] border border-zinc-800 text-sm text-white" />
+              </div>
+              <div class="md:col-span-12 flex flex-wrap items-center justify-between gap-3 pt-1">
+                <label class="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer select-none">
+                  <input id="bulkNumberingCheck" type="checkbox" checked class="accent-[#f2b705] rounded" />
+                  Numerar automáticamente (#1, #2, #3...)
+                </label>
+                <button id="applyBulkMetadataBtn" type="button" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-[#f2b705] hover:text-[#0b0b0c] text-xs font-bold uppercase tracking-wider transition">
+                  Aplicar a Todas las Fotos
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="batchItemsContainer" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 2: GALERÍA Y CATEGORÍAS -->
+      <section id="tab-gallery" class="admin-tab-panel hidden max-w-6xl mx-auto space-y-8">
+        <div class="flex justify-between items-center">
+          <h2 class="font-display text-3xl text-white">Galería & Categorías</h2>
+          <button id="deleteAllPhotosBtn" class="px-4 py-2 rounded-xl bg-red-600/20 text-red-400 text-xs font-semibold uppercase">Vaciar Galería</button>
+        </div>
+        <div class="bg-[#141416] border border-zinc-800 rounded-2xl p-6 space-y-4">
+          <h3 class="font-display text-xl text-white">Administrar Categorías</h3>
+          <div class="flex gap-3">
+            <input id="newCategoryInput" type="text" placeholder="Ej: Automotriz" class="flex-1 px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+            <button id="addCategoryBtn" class="px-5 py-2.5 rounded-xl accent-bg text-xs font-bold uppercase">Añadir</button>
+          </div>
+          <div id="adminCategoriesList" class="flex flex-wrap gap-2 pt-2"></div>
+        </div>
+        <div class="bg-[#141416] border border-zinc-800 rounded-2xl p-6">
+          <div id="adminGalleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 3: TEXTOS Y PERFIL -->
+      <section id="tab-texts" class="admin-tab-panel hidden max-w-4xl mx-auto space-y-6">
+        <h2 class="font-display text-3xl text-white">Textos & Perfil</h2>
+        <form id="textsSettingsForm" class="bg-[#141416] border border-zinc-800 rounded-2xl p-6 space-y-4">
+          <div><label class="block text-xs text-zinc-400 mb-1">Nombre de Marca</label><input id="cfgBrandName" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
+          <div><label class="block text-xs text-zinc-400 mb-1">Titular Hero</label><input id="cfgHeroTitle" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
+          <div><label class="block text-xs text-zinc-400 mb-1">Título Sección Sobre Mí</label><input id="cfgAboutTitle" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
+          <div><label class="block text-xs text-zinc-400 mb-1">Identidad Profesional</label><input id="cfgAboutRole" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
+          <div><label class="block text-xs text-zinc-400 mb-1">Biografía Principal</label><textarea id="cfgAboutBio1" rows="3" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white"></textarea></div>
+          <div><label class="block text-xs text-zinc-400 mb-1">Experiencia y Servicios</label><textarea id="cfgAboutBio2" rows="3" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white"></textarea></div>
+
+          <div class="pt-2 border-t border-zinc-800">
+            <label class="block text-xs uppercase text-zinc-400 mb-2">Fotografía de Perfil (Sobre Mí)</label>
+            <div class="flex items-center gap-4">
+              <img id="adminAboutPreview" src="" class="w-20 h-20 object-cover rounded-xl border border-zinc-800" />
+              <input id="cfgAboutPhotoInput" type="file" accept="image/*" class="block w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#f2b705] file:text-[#0b0b0c] hover:file:brightness-110 cursor-pointer" />
+            </div>
+          </div>
+          <button id="saveTextsBtn" type="submit" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase">Guardar Textos y Perfil</button>
+        </form>
+      </section>
+
+      <!-- MÓDULO 4: CONTACTO Y REDES -->
+      <section id="tab-contact" class="admin-tab-panel hidden max-w-4xl mx-auto space-y-6">
+        <h2 class="font-display text-3xl text-white">Contacto & Redes</h2>
+        <form id="contactSettingsForm" class="bg-[#141416] border border-zinc-800 rounded-2xl p-6 space-y-4">
+          <div><label class="block text-xs text-zinc-400 mb-1">Número de WhatsApp (Ej: 18296532377)</label><input id="cfgWhatsappNumber" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
+          <div><label class="block text-xs text-zinc-400 mb-1">Instagram URL</label><input id="cfgInstagramUrl" type="url" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
+          <button type="submit" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase">Guardar Contacto</button>
+        </form>
+      </section>
+
+      <!-- MÓDULO 5: APARIENCIA -->
+      <section id="tab-appearance" class="admin-tab-panel hidden max-w-4xl mx-auto space-y-6">
+        <h2 class="font-display text-3xl text-white">Apariencia</h2>
+        <form id="appearanceSettingsForm" class="bg-[#141416] border border-zinc-800 rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between bg-[#0b0b0c] p-4 rounded-xl border border-zinc-800">
+            <span>Color Acento</span>
+            <input id="cfgAccentColor" type="color" value="#f2b705" class="w-10 h-10 bg-transparent border-0 cursor-pointer" />
+          </div>
+          <button type="submit" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase">Aplicar Apariencia</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div id="lightboxModal" class="fixed inset-0 z-[9800] hidden items-center justify-center bg-black/95 backdrop-blur-md p-4">
+    <button id="lbCloseBtn" class="absolute top-5 right-5 z-20 w-11 h-11 rounded-full bg-zinc-900 text-white flex items-center justify-center hover:bg-[#f2b705] hover:text-black transition">✕</button>
+    <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-[#141416] p-6 rounded-2xl border border-zinc-800 shadow-2xl">
+      <div class="flex items-center justify-center">
+        <img id="lbImage" src="" alt="" class="max-h-[70vh] max-w-full object-contain rounded-xl" />
+      </div>
+      <div class="space-y-4">
+        <div>
+          <span id="lbCategory" class="text-xs uppercase tracking-widest accent-text font-semibold"></span>
+          <h3 id="lbTitle" class="font-display text-3xl text-white mt-1"></h3>
+          <p id="lbMeta" class="text-xs text-zinc-400 mt-0.5"></p>
+        </div>
+        <div class="border-t border-zinc-800 pt-4">
+          <h4 class="text-xs uppercase tracking-wider text-zinc-400 mb-1">Descripción de la Fotografía</h4>
+          <p id="lbDescription" class="text-zinc-300 text-sm leading-relaxed whitespace-pre-line"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTÓN FLOTANTE ADMIN -->
+  <button id="floatingReturnAdminBtn" class="hidden fixed bottom-6 right-6 z-[9500] px-4 py-2.5 rounded-full accent-bg font-bold text-xs uppercase shadow-2xl flex items-center gap-2">
+    <span>Panel Admin</span>
+    <span id="floatingUnreadBadge" class="hidden px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px]">0</span>
+  </button>
+
+  <!-- 1. PRIMERA SECCIÓN: BARRA DE NAVEGACIÓN + PORTADA PRINCIPAL -->
+  <header class="fixed top-0 inset-x-0 z-50 bg-[#0b0b0c]/85 backdrop-blur-md border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between gap-4">
+      <div id="headerLogoTrigger" class="secret-logo-trigger flex items-center gap-3" title="Doble clic para acceso administrativo">
+        <div class="logo-aperture">
+          <span class="logo-blade"></span><span class="logo-blade"></span><span class="logo-blade"></span>
+          <span class="logo-blade"></span><span class="logo-blade"></span><span class="logo-blade"></span>
+        </div>
+        <span id="pubBrandNameHeader" class="font-display text-xl sm:text-2xl lg:text-3xl text-white tracking-wider">STREETONE | ONE SHOT PHOTOGRAPH</span>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-6 lg:gap-7 text-xs uppercase tracking-widest text-zinc-300">
+        <a href="#galeria" class="hover:text-[#f2b705] transition">Galería</a>
+        <a href="#agendar" class="hover:text-[#f2b705] transition accent-text font-bold">Agendar & Cotizar</a>
+        <a href="#sobre-mi" class="hover:text-[#f2b705] transition">Sobre Mí</a>
+        <a href="#contacto" class="hover:text-[#f2b705] transition">Contacto</a>
+        <a id="headerWhatsappBtn" href="https://wa.me/18296532377" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold transition shadow-md">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+          <span>WHATSAPP</span>
+        </a>
+        <a id="headerInstagramBtn" href="https://www.instagram.com/streetone_01/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-zinc-700 hover:border-[#f2b705] hover:text-[#f2b705] transition">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          <span>Instagram</span>
+        </a>
+      </nav>
+
+      <div class="flex md:hidden items-center gap-2">
+        <a id="headerWhatsappMobileBtn" href="https://wa.me/18296532377" target="_blank" rel="noopener noreferrer" aria-label="WHATSAPP" class="inline-flex items-center gap-1.5 px-3 h-10 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[11px] font-bold uppercase tracking-wider transition shadow-md">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+          <span>WHATSAPP</span>
+        </a>
+        <a id="headerInstagramMobileBtn" href="https://www.instagram.com/streetone_01/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-zinc-800 text-zinc-200 hover:border-[#f2b705] hover:text-[#f2b705] transition">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section id="inicio" class="relative min-h-screen flex items-center justify-center text-center px-5 pt-20">
+    <div class="max-w-4xl mx-auto space-y-6">
+      <h1 id="pubHeroTitle" class="font-display text-6xl sm:text-8xl text-white">CAPTURANDO HISTORIAS EN CADA DISPARO</h1>
+      <p class="text-zinc-300 text-lg">“La luz correcta convierte un instante ordinario en una pieza eterna.”</p>
+      <div class="flex flex-wrap justify-center gap-4 pt-2">
+        <a href="#galeria" class="px-8 py-4 rounded-md accent-bg text-xs font-bold uppercase tracking-widest shadow-lg">Ver Portafolio</a>
+        <a href="#agendar" class="px-8 py-4 rounded-md bg-[#141416] border border-zinc-700 text-white hover:border-[#f2b705] text-xs font-bold uppercase tracking-widest shadow-lg transition">Agendar Cita</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. SEGUNDA SECCIÓN: SOBRE MÍ + FOTO DE PERFIL -->
+  <section id="sobre-mi" class="py-24 bg-[#111114] border-t border-zinc-800/80 px-5">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+      <div class="md:col-span-5">
+        <div class="viewfinder-card rounded-2xl aspect-[4/5] overflow-hidden shadow-2xl">
+          <img id="pubAboutPhoto" src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80" alt="Sobre Mí" class="w-full h-full object-cover" />
+        </div>
+      </div>
+      <div class="md:col-span-7 space-y-5">
+        <span id="pubAboutRole" class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Fotógrafo Automotriz, Urbano & Comercial</span>
+        <h2 id="pubAboutTitle" class="font-display text-4xl sm:text-5xl text-white">SOBRE MÍ</h2>
+        <p id="pubAboutBio1" class="text-zinc-300 text-sm sm:text-base leading-relaxed"></p>
+        <p id="pubAboutBio2" class="text-zinc-400 text-sm leading-relaxed"></p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+          <div class="bg-[#141416] border border-zinc-800/90 p-3.5 rounded-xl">
+            <span class="accent-text font-display text-xl block">AUTOMOTRIZ</span>
+            <span class="text-[11px] text-zinc-400">Car Meets, Rollers & Detalle</span>
+          </div>
+          <div class="bg-[#141416] border border-zinc-800/90 p-3.5 rounded-xl">
+            <span class="accent-text font-display text-xl block">REAL ESTATE</span>
+            <span class="text-[11px] text-zinc-400">Arquitectura & Reels</span>
+          </div>
+          <div class="bg-[#141416] border border-zinc-800/90 p-3.5 rounded-xl col-span-2 sm:col-span-1">
+            <span class="accent-text font-display text-xl block">LIFESTYLE</span>
+            <span class="text-[11px] text-zinc-400">Retratos & Eventos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. TERCERA SECCIÓN: PORTAFOLIO VISUAL Y CATEGORÍAS -->
+  <section id="galeria" class="py-24 max-w-7xl mx-auto px-5 border-t border-zinc-800/80">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+      <div>
+        <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Portafolio Visual</span>
+        <h2 class="font-display text-4xl sm:text-5xl text-white mt-1">Galería Seleccionada</h2>
+      </div>
+      <div id="publicCategoryFilters" class="flex flex-wrap gap-2.5"></div>
+    </div>
+
+    <div id="categoryCarouselControls" class="hidden items-center justify-between mb-4 bg-[#141416] border border-zinc-800/80 px-4 py-2.5 rounded-xl">
+      <div class="flex items-center gap-2.5">
+        <span class="w-2 h-2 rounded-full accent-bg animate-pulse"></span>
+        <span id="carouselActiveLabel" class="text-xs uppercase tracking-widest text-zinc-300 font-semibold">Carrusel Activo</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="carouselPrevBtn" type="button" aria-label="Anterior" class="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-[#f2b705] hover:text-[#0b0b0c] text-white text-sm font-bold transition">◀</button>
+        <button id="carouselPlayPauseBtn" type="button" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[11px] uppercase tracking-wider text-zinc-200 font-semibold transition">Pausar</button>
+        <button id="carouselNextBtn" type="button" aria-label="Siguiente" class="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-[#f2b705] hover:text-[#0b0b0c] text-white text-sm font-bold transition">▶</button>
+      </div>
+    </div>
+
+    <div id="publicGalleryContainer">
+      <div id="publicGalleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7"></div>
+    </div>
+  </section>
+
+  <!-- 4. CUARTA SECCIÓN: AGENDA Y CONSULTAS DE INFORMACIÓN -->
+  <section id="agendar" class="py-24 bg-[#111114] border-t border-zinc-800/80 px-5">
+    <div class="max-w-3xl mx-auto space-y-10">
+      <div class="text-center space-y-3">
+        <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Reserva y Presupuesto Directo</span>
+        <h2 class="font-display text-4xl sm:text-5xl text-white">AGENDA TU CITA & CONSULTA INFORMACIÓN</h2>
+        <p class="text-zinc-400 text-sm max-w-xl mx-auto">Completa los detalles de tu proyecto o sesión fotográfica. Tu solicitud quedará registrada inmediatamente en nuestro sistema.</p>
+      </div>
+
+      <form id="publicInquiryForm" class="bg-[#141416] border border-zinc-800 rounded-3xl p-6 sm:p-10 space-y-6 shadow-2xl" novalidate>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div>
+            <label for="inqFullName" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Nombre Completo *</label>
+            <input id="inqFullName" type="text" required minlength="2" placeholder="Ej: Carlos Pérez" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
+          </div>
+          <div>
+            <label for="inqPhone" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Número de Contacto *</label>
+            <input id="inqPhone" type="tel" required minlength="7" placeholder="Ej: 829 000 0000" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
+          </div>
+          <div>
+            <label for="inqEmail" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Correo Electrónico *</label>
+            <input id="inqEmail" type="email" required placeholder="cliente@correo.com" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label for="inqService" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Tipo de Servicio Fotográfico *</label>
+            <select id="inqService" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition">
+              <option value="Sesión Automotriz / Car Meet">Sesión Automotriz / Car Meet</option>
+              <option value="Fotografía Real Estate / Inmobiliaria">Fotografía Real Estate / Inmobiliaria</option>
+              <option value="Retratos & Lifestyle">Retratos & Lifestyle</option>
+              <option value="Cobertura de Evento Comercial">Cobertura de Evento Comercial</option>
+              <option value="Consulta General / Otro Proyecto">Consulta General / Otro Proyecto</option>
+            </select>
+          </div>
+          <div>
+            <label for="inqDate" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Fecha de Interés (Opcional)</label>
+            <input id="inqDate" type="date" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
+          </div>
+        </div>
+
+        <div>
+          <label for="inqMessage" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Mensaje o Descripción de la Solicitud *</label>
+          <textarea id="inqMessage" rows="4" required minlength="5" placeholder="Cuéntanos sobre tu vehículo, propiedad, evento, ubicación o tipo de sesión que deseas..." class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition"></textarea>
+        </div>
+
+        <div id="inquiryFeedbackBox" class="hidden p-4 rounded-xl text-xs font-medium leading-relaxed"></div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button id="submitInquiryBtn" type="submit" class="flex-1 py-4 rounded-xl accent-bg font-bold text-xs uppercase tracking-widest shadow-xl hover:brightness-110 transition">
+            Enviar Solicitud de Consulta
+          </button>
+          <button id="sendAndWhatsappBtn" type="button" class="px-6 py-4 rounded-xl bg-[#25D366]/15 border border-[#25D366]/50 text-[#25D366] hover:bg-[#25D366] hover:text-white font-bold text-xs uppercase tracking-wider transition">
+            Enviar + Abrir WhatsApp
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- 5. QUINTA SECCIÓN: REDES SOCIALES Y CONTACTO -->
+  <section id="contacto" class="py-20 border-t border-zinc-800/80 text-center px-5">
+    <div class="max-w-2xl mx-auto space-y-6">
+      <h2 class="font-display text-4xl text-white">¿Listo para trabajar juntos?</h2>
+      <p class="text-zinc-400 text-sm">Contáctanos directamente a través de nuestras plataformas oficiales.</p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a id="pubWhatsappBtn" href="https://wa.me/18296532377" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-7 py-4 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-xs uppercase tracking-wider shadow-lg transition">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+          <span>WHATSAPP</span>
+        </a>
+        <a id="pubInstagramBtn" href="https://www.instagram.com/streetone_01/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-7 py-4 rounded-xl bg-[#141416] border border-zinc-700 hover:border-[#f2b705] text-white hover:text-[#f2b705] font-bold text-xs uppercase tracking-wider shadow-lg transition">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          <span>INSTAGRAM</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. SEXTA SECCIÓN: PIE DE PÁGINA -->
+  <footer class="py-10 bg-[#080809] border-t border-zinc-900 text-center px-5">
+    <div class="max-w-7xl mx-auto space-y-2">
+      <p class="text-xs text-zinc-400 tracking-widest uppercase">
+        © <span id="currentCopyrightYear">2026</span> <span id="footerBrandName" class="text-white font-semibold">STREETONE | ONE SHOT PHOTOGRAPH</span>. Todos los derechos reservados.
+      </p>
+      <p class="text-[11px] text-zinc-600">Fotografía Automotriz, Urbana & Comercial</p>
+    </div>
+  </footer>
+
+  <script>
+    const LS_CONFIG_KEY = 's1_portafolio_config_v1';
+    const LS_PHOTOS_KEY = 's1_portafolio_photos_v1';
+    const LS_INQUIRIES_KEY = 's1_portafolio_inquiries_v1';
+    const LS_ADMIN_KEY = 's1_portafolio_admin_v1';
+
+    let siteConfig = {
+      brandName: 'STREETONE | ONE SHOT PHOTOGRAPH',
+      heroTitle: 'CAPTURANDO HISTORIAS EN CADA DISPARO',
+      aboutTitle: 'SOBRE MÍ',
+      aboutRole: 'Fotógrafo Automotriz, Urbano & Comercial',
+      aboutBio1: 'Especialista en fotografía automotriz, urbana y comercial, capturando la esencia, el carácter y el movimiento en cada encuadre.',
+      aboutBio2: 'Comprometido con la excelencia visual y el detalle técnico para marcas, eventos, proyectos inmobiliarios y entusiastas del motor.',
+      aboutPhoto: '',
+      whatsappNumber: '18296532377',
+      instagramUrl: 'https://www.instagram.com/streetone_01/',
+      categories: ['Automóviles', 'Urbano', 'Retratos', 'Lifestyle'],
+      theme: { accentColor: '#f2b705' }
+    };
+
+    let photosList = [];
+    let inquiriesList = [];
+    let useCloudApi = false;
+    let adminToken = localStorage.getItem('s1_mysql_admin_token') || null;
+    let isLocalAdminLoggedIn = sessionStorage.getItem('s1_local_admin_session') === 'true';
+    let batchQueue = [];
+    let selectedPublicCategory = 'ALL';
+    let selectedInquiryFilter = 'ALL';
+    let pollingInterval = null;
+    let isSubmittingInquiry = false;
+
+    let carouselInterval = null;
+    let isCarouselPaused = false;
+
+    document.getElementById('currentCopyrightYear').textContent = new Date().getFullYear();
+
+    function isAuthenticated() {
+      return useCloudApi ? Boolean(adminToken) : isLocalAdminLoggedIn;
+    }
+
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      const borderClass = type === 'error' ? 'border-red-500 text-red-200' : 'border-[#f2b705]/50 text-white';
+      t.className = `bg-[#141416] border ${borderClass} p-3.5 rounded-xl text-xs shadow-2xl animate-fade-up`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    function compressImageToDataUrl(file, maxDimension = 1600, quality = 0.82) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            let { width, height } = img;
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function loadLocalFallback() {
+      const savedCfg = localStorage.getItem(LS_CONFIG_KEY);
+      if (savedCfg) {
+        try { siteConfig = { ...siteConfig, ...JSON.parse(savedCfg) }; } catch (e) {}
+      }
+      const savedPhotos = localStorage.getItem(LS_PHOTOS_KEY);
+      if (savedPhotos) {
+        try { photosList = JSON.parse(savedPhotos); } catch (e) { photosList = []; }
+      }
+      const savedInq = localStorage.getItem(LS_INQUIRIES_KEY);
+      if (savedInq) {
+        try { inquiriesList = JSON.parse(savedInq); } catch (e) { inquiriesList = []; }
+      }
+    }
+
+    function saveLocalFallback() {
+      try { localStorage.setItem(LS_CONFIG_KEY, JSON.stringify(siteConfig)); } catch (e) {}
+      try { localStorage.setItem(LS_PHOTOS_KEY, JSON.stringify(photosList)); } catch (e) {}
+      try { localStorage.setItem(LS_INQUIRIES_KEY, JSON.stringify(inquiriesList)); } catch (e) {}
+    }
+
+    async function loadInitialPublicData() {
+      loadLocalFallback();
+      try {
+        const [cfgRes, photosRes] = await Promise.all([
+          fetch('/api/config'),
+          fetch('/api/photos')
+        ]);
+        if (cfgRes.ok && photosRes.ok) {
+          useCloudApi = true;
+          const remoteCfg = await cfgRes.json();
+          if (remoteCfg) siteConfig = { ...siteConfig, ...remoteCfg };
+          photosList = await photosRes.json();
+          document.getElementById('adminStorageModeLabel').textContent = 'MySQL Aiven Conectado';
+        } else {
+          document.getElementById('adminStorageModeLabel').textContent = 'Modo Local (Listo para API)';
+        }
+      } catch (e) {
+        useCloudApi = false;
+        document.getElementById('adminStorageModeLabel').textContent = 'Modo Local (Listo para API)';
+      }
+
+      renderPublicSite();
+      if (isAuthenticated()) {
+        document.getElementById('floatingReturnAdminBtn').classList.remove('hidden');
+        startNotificationsPolling();
+      }
+    }
+
+    // =========================================================================
+    // AUTENTICACIÓN ADMINISTRADOR
+    // =========================================================================
+    async function openAuthModal() {
+      if (isAuthenticated()) {
+        openDashboard();
+        return;
+      }
+
+      const modal = document.getElementById('authModal');
+      const checking = document.getElementById('authCheckingState');
+      const regForm = document.getElementById('registerAdminForm');
+      const logForm = document.getElementById('loginAdminForm');
+
+      document.getElementById('regErrorMsg').classList.add('hidden');
+      document.getElementById('loginErrorMsg').classList.add('hidden');
+      regForm.classList.add('hidden');
+      logForm.classList.add('hidden');
+      checking.classList.remove('hidden');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      try {
+        const res = await fetch('/api/auth');
+        if (res.ok) {
+          useCloudApi = true;
+          const data = await res.json();
+          checking.classList.add('hidden');
+          if (!data.exists) regForm.classList.remove('hidden');
+          else logForm.classList.remove('hidden');
+          return;
+        }
+      } catch (e) {
+        useCloudApi = false;
+      }
+
+      checking.classList.add('hidden');
+      const localAdmin = localStorage.getItem(LS_ADMIN_KEY);
+      if (!localAdmin) regForm.classList.remove('hidden');
+      else logForm.classList.remove('hidden');
+    }
+
+    document.getElementById('headerLogoTrigger').addEventListener('dblclick', openAuthModal);
+    document.getElementById('closeAuthModalBtn').addEventListener('click', () => {
+      document.getElementById('authModal').classList.add('hidden');
+      document.getElementById('authModal').classList.remove('flex');
+    });
+
+    document.getElementById('registerAdminForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('regAdminName').value.trim();
+      const email = document.getElementById('regAdminEmail').value.trim();
+      const password = document.getElementById('regAdminPassword').value;
+      const errBox = document.getElementById('regErrorMsg');
+      const btn = document.getElementById('regSubmitBtn');
+
+      errBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Registrando...';
+
+      if (useCloudApi) {
+        try {
+          const res = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'register', name, email, password })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Error al registrar');
+          adminToken = data.token;
+          localStorage.setItem('s1_mysql_admin_token', adminToken);
+          document.getElementById('authModal').classList.add('hidden');
+          document.getElementById('authModal').classList.remove('flex');
+          showToast(`¡Bienvenido, ${name}! Administrador guardado en Aiven MySQL.`);
+          startNotificationsPolling();
+          openDashboard();
+          btn.disabled = false;
+          btn.textContent = 'Registrar Administrador';
+          return;
+        } catch (err) {
+          errBox.textContent = err.message;
+          errBox.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Registrar Administrador';
+          return;
+        }
+      }
+
+      localStorage.setItem(LS_ADMIN_KEY, JSON.stringify({ name, email: email.toLowerCase(), password }));
+      isLocalAdminLoggedIn = true;
+      sessionStorage.setItem('s1_local_admin_session', 'true');
+      btn.disabled = false;
+      btn.textContent = 'Registrar Administrador';
+      document.getElementById('authModal').classList.add('hidden');
+      document.getElementById('authModal').classList.remove('flex');
+      showToast(`¡Bienvenido, ${name}! Cuenta creada.`);
+      startNotificationsPolling();
+      openDashboard();
+    });
+
+    document.getElementById('loginAdminForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginAdminEmail').value.trim();
+      const password = document.getElementById('loginAdminPassword').value;
+      const errBox = document.getElementById('loginErrorMsg');
+      const btn = document.getElementById('loginSubmitBtn');
+
+      errBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+
+      if (useCloudApi) {
+        try {
+          const res = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'login', email, password })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Credenciales inválidas');
+          adminToken = data.token;
+          localStorage.setItem('s1_mysql_admin_token', adminToken);
+          document.getElementById('authModal').classList.add('hidden');
+          document.getElementById('authModal').classList.remove('flex');
+          showToast('Sesión administrativa iniciada');
+          startNotificationsPolling();
+          openDashboard();
+          btn.disabled = false;
+          btn.textContent = 'Iniciar Sesión';
+          return;
+        } catch (err) {
+          errBox.textContent = err.message;
+          errBox.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Iniciar Sesión';
+          return;
+        }
+      }
+
+      const saved = JSON.parse(localStorage.getItem(LS_ADMIN_KEY) || 'null');
+      btn.disabled = false;
+      btn.textContent = 'Iniciar Sesión';
+      if (!saved || saved.email !== email.toLowerCase() || saved.password !== password) {
+        errBox.textContent = 'Correo o contraseña incorrectos.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      isLocalAdminLoggedIn = true;
+      sessionStorage.setItem('s1_local_admin_session', 'true');
+      document.getElementById('authModal').classList.add('hidden');
+      document.getElementById('authModal').classList.remove('flex');
+      showToast('Sesión administrativa iniciada');
+      startNotificationsPolling();
+      openDashboard();
+    });
+
+    document.getElementById('logoutAdminBtn').addEventListener('click', () => {
+      adminToken = null;
+      isLocalAdminLoggedIn = false;
+      localStorage.removeItem('s1_mysql_admin_token');
+      sessionStorage.removeItem('s1_local_admin_session');
+      if (pollingInterval) clearInterval(pollingInterval);
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('floatingReturnAdminBtn').classList.add('hidden');
+      showToast('Sesión cerrada');
+    });
+
+    function openDashboard() {
+      if (!isAuthenticated()) return;
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      document.getElementById('adminDashboard').classList.add('flex');
+      document.getElementById('floatingReturnAdminBtn').classList.add('hidden');
+      populateAdminForms();
+      renderAdminGallery();
+      renderAdminCategories();
+      fetchAdminInquiries();
+    }
+
+    document.getElementById('minimizeAdminBtn').addEventListener('click', () => {
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('floatingReturnAdminBtn').classList.remove('hidden');
+    });
+    document.getElementById('minimizeAdminBtnDesktop').addEventListener('click', () => {
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('floatingReturnAdminBtn').classList.remove('hidden');
+    });
+    document.getElementById('floatingReturnAdminBtn').addEventListener('click', openDashboard);
+
+    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-nav-btn').forEach(b => {
+          b.classList.remove('bg-[#f2b705]', 'text-[#0b0b0c]');
+          b.classList.add('text-zinc-300');
+        });
+        btn.classList.add('bg-[#f2b705]', 'text-[#0b0b0c]');
+        btn.classList.remove('text-zinc-300');
+        document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById(`tab-${btn.getAttribute('data-admin-tab')}`).classList.remove('hidden');
+      });
+    });
+
+    // =========================================================================
+    // FORMULARIO PÚBLICO DE AGENDA & NOTIFICACIONES EN TIEMPO REAL
+    // =========================================================================
+    function showInquiryFeedback(msg, isSuccess = true) {
+      const box = document.getElementById('inquiryFeedbackBox');
+      box.textContent = msg;
+      box.className = `p-4 rounded-xl text-xs font-medium leading-relaxed ${
+        isSuccess
+          ? 'bg-emerald-950/60 border border-emerald-600/50 text-emerald-200'
+          : 'bg-red-950/60 border border-red-600/50 text-red-200'
+      }`;
+      box.classList.remove('hidden');
+    }
+
+    async function handleInquirySubmission(alsoOpenWhatsapp = false) {
+      if (isSubmittingInquiry) return;
+
+      const fullName = document.getElementById('inqFullName').value.trim();
+      const phone = document.getElementById('inqPhone').value.trim();
+      const email = document.getElementById('inqEmail').value.trim();
+      const service = document.getElementById('inqService').value;
+      const eventDate = document.getElementById('inqDate').value;
+      const message = document.getElementById('inqMessage').value.trim();
+
+      if (fullName.length < 2) return showInquiryFeedback('Por favor ingresa tu nombre completo.', false);
+      if (phone.replace(/\D/g, '').length < 7) return showInquiryFeedback('Por favor ingresa un número de contacto válido.', false);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showInquiryFeedback('Por favor ingresa un correo electrónico válido.', false);
+      if (message.length < 5) return showInquiryFeedback('Por favor escribe una breve descripción de tu solicitud.', false);
+
+      isSubmittingInquiry = true;
+      const btn = document.getElementById('submitInquiryBtn');
+      btn.disabled = true;
+      btn.textContent = 'Enviando solicitud...';
+
+      const newInquiry = {
+        id: 'inq_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        fullName, phone, email, service,
+        eventDate: eventDate || 'Por definir',
+        message,
+        read: false,
+        createdAt: Date.now()
+      };
+
+      if (useCloudApi) {
+        try {
+          const res = await fetch('/api/inquiries', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newInquiry)
+          });
+          if (!res.ok) throw new Error('Error en API');
+        } catch (e) {
+          inquiriesList.unshift(newInquiry);
+          saveLocalFallback();
+        }
+      } else {
+        inquiriesList.unshift(newInquiry);
+        saveLocalFallback();
+      }
+
+      document.getElementById('publicInquiryForm').reset();
+      showInquiryFeedback('¡Solicitud enviada con éxito! Hemos recibido tu consulta y nos pondremos en contacto muy pronto.', true);
+      showToast('¡Consulta enviada correctamente!');
+      if (isAuthenticated()) fetchAdminInquiries();
+
+      if (alsoOpenWhatsapp) {
+        const waText = `¡Hola! Acabo de enviar una consulta en *${siteConfig.brandName}*:%0n%0n` +
+                       `👤 *Nombre:* ${encodeURIComponent(fullName)}%0n` +
+                       `📱 *Contacto:* ${encodeURIComponent(phone)}%0n` +
+                       `📧 *Correo:* ${encodeURIComponent(email)}%0n` +
+                       `📷 *Servicio:* ${encodeURIComponent(service)}%0n` +
+                       `📅 *Fecha:* ${encodeURIComponent(eventDate || 'Por definir')}%0n` +
+                       `📝 *Mensaje:* ${encodeURIComponent(message)}`;
+        window.open(`https://wa.me/${siteConfig.whatsappNumber}?text=${waText}`, '_blank', 'noopener,noreferrer');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Enviar Solicitud de Consulta';
+      setTimeout(() => { isSubmittingInquiry = false; }, 1200);
+    }
+
+    document.getElementById('publicInquiryForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleInquirySubmission(false);
+    });
+    document.getElementById('sendAndWhatsappBtn').addEventListener('click', () => handleInquirySubmission(true));
+
+    async function fetchAdminInquiries(notifyIfNew = false) {
+      if (!isAuthenticated()) return;
+      if (useCloudApi && adminToken) {
+        try {
+          const res = await fetch('/api/inquiries', { headers: { 'x-admin-token': adminToken } });
+          if (res.ok) {
+            const freshList = await res.json();
+            const prevUnread = inquiriesList.filter(i => !i.read).length;
+            const nextUnread = freshList.filter(i => !i.read).length;
+            if (notifyIfNew && nextUnread > prevUnread) {
+              showToast('🔔 ¡Nueva solicitud de cliente recibida!');
+            }
+            inquiriesList = freshList;
+            renderAdminInquiries();
+            return;
+          }
+        } catch (e) {}
+      }
+      renderAdminInquiries();
+    }
+
+    function startNotificationsPolling() {
+      fetchAdminInquiries(false);
+      if (pollingInterval) clearInterval(pollingInterval);
+      pollingInterval = setInterval(() => fetchAdminInquiries(true), 8000);
+    }
+
+    function renderAdminInquiries() {
+      const unreadCount = inquiriesList.filter(i => !i.read).length;
+      document.getElementById('pendingCountHeader').textContent = unreadCount;
+      document.getElementById('totalInquiriesHeader').textContent = inquiriesList.length;
+
+      const sideBadge = document.getElementById('sidebarUnreadBadge');
+      const floatBadge = document.getElementById('floatingUnreadBadge');
+
+      if (unreadCount > 0) {
+        sideBadge.textContent = unreadCount;
+        sideBadge.classList.remove('hidden');
+        floatBadge.textContent = unreadCount;
+        floatBadge.classList.remove('hidden');
+      } else {
+        sideBadge.classList.add('hidden');
+        floatBadge.classList.add('hidden');
+      }
+
+      const container = document.getElementById('adminInquiriesList');
+      container.innerHTML = '';
+
+      const filtered = inquiriesList.filter(item => {
+        if (selectedInquiryFilter === 'UNREAD') return !item.read;
+        if (selectedInquiryFilter === 'READ') return item.read;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="bg-[#141416] border border-zinc-800 rounded-2xl p-10 text-center text-zinc-500 text-sm">No hay solicitudes en esta vista.</div>`;
+        return;
+      }
+
+      filtered.forEach(inq => {
+        const dateStr = new Date(Number(inq.createdAt)).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' });
+        const card = document.createElement('div');
+        card.className = `p-5 rounded-2xl border transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+          !inq.read ? 'bg-[#18181c] border-[#f2b705]/60 shadow-lg' : 'bg-[#141416] border-zinc-800/80 opacity-85 hover:opacity-100'
+        }`;
+
+        card.innerHTML = `
+          <div class="space-y-1.5">
+            <div class="flex flex-wrap items-center gap-2">
+              ${!inq.read
+                ? '<span class="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider">Nueva</span>'
+                : '<span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">Leída</span>'}
+              <span class="text-xs font-bold accent-text uppercase tracking-wider">${inq.service}</span>
+              <span class="text-[11px] text-zinc-500">• ${dateStr}</span>
+            </div>
+            <h4 class="font-display text-2xl text-white">${inq.fullName}</h4>
+            <p class="text-xs text-zinc-300 line-clamp-1">${inq.message}</p>
+            <p class="text-[11px] text-zinc-400">📱 ${inq.phone} &nbsp;|&nbsp; 📧 ${inq.email} &nbsp;|&nbsp; 📅 Fecha interés: ${inq.eventDate || 'Por definir'}</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-[#f2b705] hover:text-[#0b0b0c] text-xs font-bold uppercase tracking-wider transition">Ver Detalle</button>
+          </div>
+        `;
+        card.onclick = () => openInquiryDetailModal(inq);
+        container.appendChild(card);
+      });
+    }
+
+    document.querySelectorAll('.inq-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.inq-filter-btn').forEach(b => {
+          b.classList.remove('accent-bg');
+          b.classList.add('bg-zinc-800', 'text-zinc-300');
+        });
+        btn.classList.add('accent-bg');
+        btn.classList.remove('bg-zinc-800', 'text-zinc-300');
+        selectedInquiryFilter = btn.getAttribute('data-inq-filter');
+        renderAdminInquiries();
+      });
+    });
+
+    async function openInquiryDetailModal(inq) {
+      const modal = document.getElementById('inquiryDetailModal');
+      const badge = document.getElementById('inqDetailStatusBadge');
+      const toggleBtn = document.getElementById('inqToggleReadBtn');
+
+      badge.textContent = inq.read ? 'Leída' : 'Pendiente / Nueva';
+      badge.className = `inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1.5 ${
+        inq.read ? 'bg-zinc-800 text-zinc-300' : 'bg-red-600 text-white'
+      }`;
+
+      document.getElementById('inqDetailName').textContent = inq.fullName;
+      document.getElementById('inqDetailDateReceived').textContent = `Recibida el ${new Date(Number(inq.createdAt)).toLocaleString('es-DO')}`;
+      document.getElementById('inqDetailPhone').textContent = inq.phone;
+      document.getElementById('inqDetailEmail').textContent = inq.email;
+      document.getElementById('inqDetailService').textContent = inq.service;
+      document.getElementById('inqDetailEventDate').textContent = inq.eventDate || 'Por definir';
+      document.getElementById('inqDetailMessage').textContent = inq.message;
+
+      const cleanClientPhone = inq.phone.replace(/\D/g, '');
+      const waReplyMsg = `Hola ${encodeURIComponent(inq.fullName)}, te saludamos de *${siteConfig.brandName}* en respuesta a tu consulta sobre *${encodeURIComponent(inq.service)}*.`;
+      document.getElementById('inqReplyWhatsappBtn').href = `https://wa.me/${cleanClientPhone}?text=${waReplyMsg}`;
+
+      if (!inq.read) {
+        await updateInquiryStatus(inq.id, true);
+        inq.read = true;
+        badge.textContent = 'Leída';
+        badge.className = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1.5 bg-zinc-800 text-zinc-300';
+      }
+
+      toggleBtn.textContent = inq.read ? 'Marcar como Pendiente' : 'Marcar como Leída';
+
+      toggleBtn.onclick = async () => {
+        const nextState = !inq.read;
+        await updateInquiryStatus(inq.id, nextState);
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        showToast(nextState ? 'Marcada como leída' : 'Marcada como pendiente');
+      };
+
+      document.getElementById('inqDeleteBtn').onclick = async () => {
+        if (useCloudApi && adminToken) {
+          await fetch(`/api/inquiries?id=${inq.id}`, {
+            method: 'DELETE',
+            headers: { 'x-admin-token': adminToken }
+          });
+        }
+        inquiriesList = inquiriesList.filter(i => i.id !== inq.id);
+        saveLocalFallback();
+        renderAdminInquiries();
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        showToast('Solicitud eliminada');
+      };
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    document.getElementById('closeInqDetailBtn').addEventListener('click', () => {
+      document.getElementById('inquiryDetailModal').classList.add('hidden');
+      document.getElementById('inquiryDetailModal').classList.remove('flex');
+    });
+
+    async function updateInquiryStatus(id, isRead) {
+      if (useCloudApi && adminToken) {
+        await fetch('/api/inquiries', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ id, read: isRead })
+        });
+      }
+      inquiriesList = inquiriesList.map(i => i.id === id ? { ...i, read: isRead } : i);
+      saveLocalFallback();
+      renderAdminInquiries();
+    }
+
+    // =========================================================================
+    // SUBIDA DE FOTOS
+    // =========================================================================
+    const dropZone = document.getElementById('batchDropZone');
+    const fileInput = document.getElementById('batchFileInput');
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      batchQueue = [];
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+
+      files.forEach((file, idx) => {
+        batchQueue.push({
+          id: 'photo_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 6),
+          file,
+          previewUrl: URL.createObjectURL(file),
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          category: siteConfig.categories[0] || 'Automóviles',
+          location: '',
+          description: '',
+          createdAt: Date.now() + idx
+        });
+      });
+      renderBatchQueue();
+    });
+
+    document.getElementById('applyBulkMetadataBtn').addEventListener('click', () => {
+      if (batchQueue.length === 0) return;
+      const bulkTitle = document.getElementById('bulkTitleInput').value.trim();
+      const bulkCategory = document.getElementById('bulkCategorySelect').value;
+      const bulkDesc = document.getElementById('bulkDescInput').value.trim();
+      const useNumbering = document.getElementById('bulkNumberingCheck').checked;
+
+      batchQueue.forEach((item, index) => {
+        if (bulkTitle) item.title = useNumbering && batchQueue.length > 1 ? `${bulkTitle} #${index + 1}` : bulkTitle;
+        if (bulkCategory) item.category = bulkCategory;
+        if (bulkDesc) item.description = bulkDesc;
+      });
+      renderBatchQueue();
+      showToast('Datos aplicados a todas las fotos');
+    });
+
+    function renderBatchQueue() {
+      const container = document.getElementById('batchItemsContainer');
+      const controlsBar = document.getElementById('batchControlsBar');
+      const bulkCategorySelect = document.getElementById('bulkCategorySelect');
+
+      bulkCategorySelect.innerHTML = siteConfig.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      container.innerHTML = '';
+
+      if (batchQueue.length > 0) {
+        controlsBar.classList.remove('hidden');
+        document.getElementById('batchQueueCountLabel').textContent = `${batchQueue.length} foto(s) lista(s)`;
+      } else {
+        controlsBar.classList.add('hidden');
+        return;
+      }
+
+      batchQueue.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'bg-[#141416] border border-zinc-800 rounded-2xl p-5 flex flex-col md:flex-row gap-5 items-start';
+        div.innerHTML = `
+          <img src="${item.previewUrl}" class="w-full md:w-36 h-36 object-cover rounded-xl border border-zinc-800 shrink-0" />
+          <div class="flex-1 w-full space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Nombre Individual</label>
+                <input type="text" value="${item.title}" oninput="updateBatchItem(${index}, 'title', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Categoría</label>
+                <select onchange="updateBatchItem(${index}, 'category', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white">
+                  ${siteConfig.categories.map(c => `<option value="${c}" ${c === item.category ? 'selected' : ''}>${c}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Ubicación</label>
+                <input type="text" value="${item.location}" placeholder="Ej: San Juan" oninput="updateBatchItem(${index}, 'location', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Descripción de la Foto</label>
+              <textarea rows="2" placeholder="Describe la toma, cámara, lente o historia..." oninput="updateBatchItem(${index}, 'description', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white">${item.description}</textarea>
+            </div>
+            <div class="flex justify-end">
+              <button type="button" onclick="removeBatchItem(${index})" class="text-xs text-red-400 hover:text-red-300">Quitar</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    window.updateBatchItem = (i, f, v) => { batchQueue[i][f] = v; };
+    window.removeBatchItem = (i) => { batchQueue.splice(i, 1); renderBatchQueue(); };
+
+    document.getElementById('publishBatchBtn').addEventListener('click', async () => {
+      if (!isAuthenticated() || batchQueue.length === 0) return;
+
+      const btn = document.getElementById('publishBatchBtn');
+      btn.disabled = true;
+
+      for (let i = 0; i < batchQueue.length; i++) {
+        const item = batchQueue[i];
+        btn.textContent = `Subiendo ${i + 1} de ${batchQueue.length}...`;
+        const imageUrl = await compressImageToDataUrl(item.file, 1600, 0.82);
+
+        const photoDoc = {
+          id: item.id,
+          title: item.title || 'Sin título',
+          category: item.category,
+          location: item.location,
+          description: item.description,
+          imageUrl,
+          createdAt: item.createdAt
+        };
+
+        if (useCloudApi && adminToken) {
+          try {
+            const res = await fetch('/api/photos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+              body: JSON.stringify(photoDoc)
+            });
+            if (!res.ok) throw new Error('Error API');
+          } catch (e) {
+            photosList.unshift(photoDoc);
+          }
+        } else {
+          photosList.unshift(photoDoc);
+        }
+      }
+
+      saveLocalFallback();
+      if (useCloudApi) await loadInitialPublicData();
+      else renderPublicSite();
+
+      batchQueue = [];
+      fileInput.value = '';
+      document.getElementById('batchControlsBar').classList.add('hidden');
+      renderAdminGallery();
+      btn.disabled = false;
+      btn.textContent = 'Publicar Ahora';
+      showToast('¡Fotografías publicadas!');
+    });
+
+    // =========================================================================
+    // RENDERIZADO PÚBLICO Y CARRUSEL
+    // =========================================================================
+    function stopCategoryCarousel() {
+      if (carouselInterval) {
+        clearInterval(carouselInterval);
+        carouselInterval = null;
+      }
+    }
+
+    function startCategoryCarousel(viewportEl) {
+      stopCategoryCarousel();
+      if (!viewportEl) return;
+      carouselInterval = setInterval(() => {
+        if (isCarouselPaused) return;
+        const maxScroll = viewportEl.scrollWidth - viewportEl.clientWidth;
+        if (maxScroll <= 0) return;
+        if (viewportEl.scrollLeft + 360 >= maxScroll - 5) {
+          viewportEl.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          viewportEl.scrollBy({ left: 360, behavior: 'smooth' });
+        }
+      }, 2800);
+    }
+
+    function openPhotoLightbox(photo) {
+      document.getElementById('lbImage').src = photo.imageUrl;
+      document.getElementById('lbCategory').textContent = photo.category;
+      document.getElementById('lbTitle').textContent = photo.title;
+      document.getElementById('lbMeta').textContent = photo.location ? `📍 ${photo.location}` : '';
+      document.getElementById('lbDescription').textContent = photo.description || 'Sin descripción adicional.';
+      document.getElementById('lightboxModal').classList.remove('hidden');
+      document.getElementById('lightboxModal').classList.add('flex');
+    }
+
+    function createPhotoCardElement(photo, index, isCarousel = false) {
+      const card = document.createElement('div');
+      card.className = `viewfinder-card rounded-xl cursor-pointer aspect-[4/5] shadow-lg ${isCarousel ? 'carousel-slide-card' : 'animate-fade-up'}`;
+      if (isCarousel) card.style.animationDelay = `${Math.min(index * 80, 600)}ms`;
+
+      card.innerHTML = `
+        <div class="viewfinder-corner"></div>
+        <img src="${photo.imageUrl}" alt="${photo.title}" loading="lazy" class="w-full h-full object-cover transition duration-500 hover:scale-105" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 hover:opacity-100 transition duration-300 flex flex-col justify-end p-5">
+          <span class="text-[11px] uppercase tracking-widest accent-text font-semibold">${photo.category}</span>
+          <h3 class="font-display text-2xl text-white">${photo.title}</h3>
+          ${photo.location ? `<p class="text-xs text-zinc-300 mt-0.5">📍 ${photo.location}</p>` : ''}
+          ${photo.description ? `<p class="text-xs text-zinc-400 mt-1 line-clamp-2">${photo.description}</p>` : ''}
+        </div>
+      `;
+      card.onclick = () => openPhotoLightbox(photo);
+      return card;
+    }
+
+    function renderPublicSite() {
+      document.getElementById('pubBrandNameHeader').textContent = siteConfig.brandName;
+      document.getElementById('footerBrandName').textContent = siteConfig.brandName;
+      document.getElementById('pubHeroTitle').textContent = siteConfig.heroTitle;
+      document.getElementById('pubAboutTitle').textContent = siteConfig.aboutTitle;
+      document.getElementById('pubAboutRole').textContent = siteConfig.aboutRole || 'Fotógrafo Automotriz, Urbano & Comercial';
+      document.getElementById('pubAboutBio1').textContent = siteConfig.aboutBio1;
+      document.getElementById('pubAboutBio2').textContent = siteConfig.aboutBio2;
+      document.getElementById('pubAboutPhoto').src = siteConfig.aboutPhoto || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80';
+
+      const cleanWa = (siteConfig.whatsappNumber || '18296532377').replace(/\D/g, '');
+      const waHref = `https://wa.me/${cleanWa}`;
+      document.getElementById('headerWhatsappBtn').href = waHref;
+      document.getElementById('headerWhatsappMobileBtn').href = waHref;
+      document.getElementById('pubWhatsappBtn').href = waHref;
+
+      const igUrl = siteConfig.instagramUrl || 'https://www.instagram.com/streetone_01/';
+      document.getElementById('pubInstagramBtn').href = igUrl;
+      document.getElementById('headerInstagramBtn').href = igUrl;
+      document.getElementById('headerInstagramMobileBtn').href = igUrl;
+
+      document.documentElement.style.setProperty('--accent-color', siteConfig.theme?.accentColor || '#f2b705');
+
+      const filtersContainer = document.getElementById('publicCategoryFilters');
+      let filtersHtml = `<button onclick="setPublicCategory('ALL')" class="px-4 py-2 rounded-xl text-xs font-semibold uppercase transition ${selectedPublicCategory === 'ALL' ? 'accent-bg' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}">Todas</button>`;
+      siteConfig.categories.forEach(cat => {
+        filtersHtml += `<button onclick="setPublicCategory('${cat}')" class="px-4 py-2 rounded-xl text-xs font-semibold uppercase transition ${selectedPublicCategory === cat ? 'accent-bg' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}">${cat}</button>`;
+      });
+      filtersContainer.innerHTML = filtersHtml;
+
+      const galleryContainer = document.getElementById('publicGalleryContainer');
+      const controlsEl = document.getElementById('categoryCarouselControls');
+      stopCategoryCarousel();
+      galleryContainer.innerHTML = '';
+
+      const filteredPhotos = selectedPublicCategory === 'ALL'
+        ? photosList
+        : photosList.filter(p => p.category === selectedPublicCategory);
+
+      if (filteredPhotos.length === 0) {
+        controlsEl.classList.add('hidden');
+        controlsEl.classList.remove('flex');
+        galleryContainer.innerHTML = `<div class="py-16 text-center text-zinc-500 text-sm">No hay fotografías publicadas en esta categoría todavía.</div>`;
+        return;
+      }
+
+      if (selectedPublicCategory !== 'ALL') {
+        controlsEl.classList.remove('hidden');
+        controlsEl.classList.add('flex');
+        document.getElementById('carouselActiveLabel').textContent = `Categoría: ${selectedPublicCategory} (${filteredPhotos.length} fotos)`;
+
+        const viewport = document.createElement('div');
+        viewport.className = 'category-carousel-viewport';
+        const track = document.createElement('div');
+        track.className = 'category-carousel-track';
+
+        filteredPhotos.forEach((photo, idx) => track.appendChild(createPhotoCardElement(photo, idx, true)));
+        viewport.appendChild(track);
+        galleryContainer.appendChild(viewport);
+
+        viewport.addEventListener('mouseenter', () => { isCarouselPaused = true; });
+        viewport.addEventListener('mouseleave', () => { isCarouselPaused = false; });
+        document.getElementById('carouselPrevBtn').onclick = () => viewport.scrollBy({ left: -360, behavior: 'smooth' });
+        document.getElementById('carouselNextBtn').onclick = () => viewport.scrollBy({ left: 360, behavior: 'smooth' });
+
+        const playPauseBtn = document.getElementById('carouselPlayPauseBtn');
+        isCarouselPaused = false;
+        playPauseBtn.textContent = 'Pausar';
+        playPauseBtn.onclick = () => {
+          isCarouselPaused = !isCarouselPaused;
+          playPauseBtn.textContent = isCarouselPaused ? 'Reanudar' : 'Pausar';
+        };
+
+        startCategoryCarousel(viewport);
+      } else {
+        controlsEl.classList.add('hidden');
+        controlsEl.classList.remove('flex');
+        const grid = document.createElement('div');
+        grid.id = 'publicGalleryGrid';
+        grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7';
+        filteredPhotos.forEach((photo, idx) => grid.appendChild(createPhotoCardElement(photo, idx, false)));
+        galleryContainer.appendChild(grid);
+      }
+    }
+
+    window.setPublicCategory = function(cat) {
+      selectedPublicCategory = cat;
+      renderPublicSite();
+    };
+
+    // =========================================================================
+    // ADMIN GALERÍA, CATEGORÍAS, PERFIL Y CONFIGURACIÓN
+    // =========================================================================
+    function populateAdminForms() {
+      document.getElementById('cfgBrandName').value = siteConfig.brandName;
+      document.getElementById('cfgHeroTitle').value = siteConfig.heroTitle;
+      document.getElementById('cfgAboutTitle').value = siteConfig.aboutTitle;
+      document.getElementById('cfgAboutRole').value = siteConfig.aboutRole || '';
+      document.getElementById('cfgAboutBio1').value = siteConfig.aboutBio1;
+      document.getElementById('cfgAboutBio2').value = siteConfig.aboutBio2 || '';
+      document.getElementById('adminAboutPreview').src = siteConfig.aboutPhoto || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80';
+      document.getElementById('cfgWhatsappNumber').value = siteConfig.whatsappNumber;
+      document.getElementById('cfgInstagramUrl').value = siteConfig.instagramUrl || 'https://www.instagram.com/streetone_01/';
+      document.getElementById('cfgAccentColor').value = siteConfig.theme?.accentColor || '#f2b705';
+    }
+
+    function renderAdminGallery() {
+      const grid = document.getElementById('adminGalleryGrid');
+      grid.innerHTML = '';
+      photosList.forEach(photo => {
+        const div = document.createElement('div');
+        div.className = 'bg-[#0b0b0c] border border-zinc-800 rounded-xl p-3 flex flex-col justify-between';
+        div.innerHTML = `
+          <div>
+            <img src="${photo.imageUrl}" class="w-full h-32 object-cover rounded-lg mb-2"/>
+            <h4 class="text-xs text-white font-semibold truncate">${photo.title}</h4>
+            <span class="text-[10px] accent-text uppercase tracking-wider block">${photo.category}</span>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button onclick="openEditPhoto('${photo.id}')" class="w-full py-1.5 bg-zinc-800 text-zinc-200 text-xs rounded-lg hover:bg-[#f2b705] hover:text-[#0b0b0c] transition">Editar</button>
+            <button onclick="deletePhoto('${photo.id}')" class="w-full py-1.5 bg-red-500/20 text-red-400 text-xs rounded-lg hover:bg-red-600 hover:text-white transition">Borrar</button>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    window.openEditPhoto = (id) => {
+      const photo = photosList.find(p => p.id === id);
+      if (!photo) return;
+      document.getElementById('editPhotoId').value = photo.id;
+      document.getElementById('editPhotoTitle').value = photo.title || '';
+      document.getElementById('editPhotoLocation').value = photo.location || '';
+      document.getElementById('editPhotoDesc').value = photo.description || '';
+      document.getElementById('editPhotoCategory').innerHTML = siteConfig.categories.map(c => `<option value="${c}" ${c === photo.category ? 'selected' : ''}>${c}</option>`).join('');
+      document.getElementById('editPhotoModal').classList.remove('hidden');
+      document.getElementById('editPhotoModal').classList.add('flex');
+    };
+
+    document.getElementById('cancelEditPhotoBtn').addEventListener('click', () => {
+      document.getElementById('editPhotoModal').classList.add('hidden');
+      document.getElementById('editPhotoModal').classList.remove('flex');
+    });
+
+    document.getElementById('saveEditPhotoBtn').addEventListener('click', async () => {
+      const id = document.getElementById('editPhotoId').value;
+      const updated = {
+        id,
+        title: document.getElementById('editPhotoTitle').value.trim(),
+        category: document.getElementById('editPhotoCategory').value,
+        location: document.getElementById('editPhotoLocation').value.trim(),
+        description: document.getElementById('editPhotoDesc').value.trim()
+      };
+      if (useCloudApi && adminToken) {
+        await fetch('/api/photos', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify(updated)
+        });
+      }
+      photosList = photosList.map(p => p.id === id ? { ...p, ...updated } : p);
+      saveLocalFallback();
+      document.getElementById('editPhotoModal').classList.add('hidden');
+      document.getElementById('editPhotoModal').classList.remove('flex');
+      renderPublicSite();
+      renderAdminGallery();
+      showToast('Fotografía actualizada');
+    });
+
+    window.deletePhoto = async (id) => {
+      if (useCloudApi && adminToken) {
+        await fetch(`/api/photos?id=${id}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-token': adminToken }
+        });
+      }
+      photosList = photosList.filter(p => p.id !== id);
+      saveLocalFallback();
+      renderPublicSite();
+      renderAdminGallery();
+      showToast('Fotografía eliminada');
+    };
+
+    function renderAdminCategories() {
+      const list = document.getElementById('adminCategoriesList');
+      list.innerHTML = siteConfig.categories.map(c => `
+        <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-800 text-xs text-white rounded-lg">
+          <span>${c}</span>
+          ${siteConfig.categories.length > 1 ? `<button type="button" onclick="removeCategory('${c}')" class="text-zinc-400 hover:text-red-400 font-bold">×</button>` : ''}
+        </span>
+      `).join('');
+    }
+
+    window.removeCategory = async (catName) => {
+      siteConfig.categories = siteConfig.categories.filter(c => c !== catName);
+      await saveConfig();
+      renderAdminCategories();
+      showToast('Categoría eliminada');
+    };
+
+    async function saveConfig() {
+      saveLocalFallback();
+      if (useCloudApi && adminToken) {
+        await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify(siteConfig)
+        });
+      }
+      renderPublicSite();
+    }
+
+    document.getElementById('textsSettingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('saveTextsBtn');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      siteConfig.brandName = document.getElementById('cfgBrandName').value.trim();
+      siteConfig.heroTitle = document.getElementById('cfgHeroTitle').value.trim();
+      siteConfig.aboutTitle = document.getElementById('cfgAboutTitle').value.trim();
+      siteConfig.aboutRole = document.getElementById('cfgAboutRole').value.trim();
+      siteConfig.aboutBio1 = document.getElementById('cfgAboutBio1').value.trim();
+      siteConfig.aboutBio2 = document.getElementById('cfgAboutBio2').value.trim();
+
+      const aboutFile = document.getElementById('cfgAboutPhotoInput').files[0];
+      if (aboutFile) {
+        siteConfig.aboutPhoto = await compressImageToDataUrl(aboutFile, 1000, 0.84);
+        document.getElementById('adminAboutPreview').src = siteConfig.aboutPhoto;
+      }
+
+      await saveConfig();
+      btn.disabled = false;
+      btn.textContent = 'Guardar Textos y Perfil';
+      showToast('Textos y perfil guardados');
+    });
+
+    document.getElementById('contactSettingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      siteConfig.whatsappNumber = document.getElementById('cfgWhatsappNumber').value.trim();
+      siteConfig.instagramUrl = document.getElementById('cfgInstagramUrl').value.trim();
+      await saveConfig();
+      showToast('Contacto guardado');
+    });
+
+    document.getElementById('appearanceSettingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      siteConfig.theme.accentColor = document.getElementById('cfgAccentColor').value;
+      await saveConfig();
+      showToast('Apariencia actualizada');
+    });
+
+    document.getElementById('addCategoryBtn').addEventListener('click', async () => {
+      const val = document.getElementById('newCategoryInput').value.trim();
+      if (val && !siteConfig.categories.includes(val)) {
+        siteConfig.categories.push(val);
+        document.getElementById('newCategoryInput').value = '';
+        await saveConfig();
+        renderAdminCategories();
+        showToast('Categoría añadida');
+      }
+    });
+
+    document.getElementById('deleteAllPhotosBtn').addEventListener('click', () => {
+      document.getElementById('confirmModal').classList.remove('hidden');
+      document.getElementById('confirmModal').classList.add('flex');
+      document.getElementById('confirmTitle').textContent = 'Vaciar Galería';
+      document.getElementById('confirmMessage').textContent = '¿Eliminar permanentemente todas las fotografías?';
+
+      document.getElementById('confirmAcceptBtn').onclick = async () => {
+        if (useCloudApi && adminToken) {
+          await fetch('/api/photos?all=true', {
+            method: 'DELETE',
+            headers: { 'x-admin-token': adminToken }
+          });
+        }
+        photosList = [];
+        saveLocalFallback();
+        renderPublicSite();
+        renderAdminGallery();
+        document.getElementById('confirmModal').classList.add('hidden');
+        document.getElementById('confirmModal').classList.remove('flex');
+        showToast('Galería vaciada');
+      };
+    });
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', () => {
+      document.getElementById('confirmModal').classList.add('hidden');
+      document.getElementById('confirmModal').classList.remove('flex');
+    });
+
+    document.getElementById('lbCloseBtn').addEventListener('click', () => {
+      document.getElementById('lightboxModal').classList.add('hidden');
+      document.getElementById('lightboxModal').classList.remove('flex');
+    });
+
+    loadInitialPublicData();
+  </script>
+</body>
+</html>
