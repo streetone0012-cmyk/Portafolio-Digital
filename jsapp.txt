@@ -1,0 +1,928 @@
+const LS_CONFIG_KEY = 's1_ghpages_config_v1';
+const LS_PHOTOS_KEY = 's1_ghpages_photos_v1';
+const LS_INQUIRIES_KEY = 's1_ghpages_inquiries_v1';
+const LS_ADMIN_KEY = 's1_ghpages_admin_v1';
+
+// Puedes precargar aquí fotos estáticas alojadas en tu carpeta assets/img/ de GitHub
+const STATIC_INITIAL_PHOTOS = [
+  // Ejemplo:
+  // {
+  //   id: 'static_1',
+  //   title: 'Honda Civic EK3 — Sesión Nocturna',
+  //   category: 'Automóviles',
+  //   location: 'Santo Domingo',
+  //   description: 'Captura urbana con iluminación natural y detalle en carrocería.',
+  //   imageUrl: 'assets/img/civic-ek3.jpg',
+  //   createdAt: 1730000000000
+  // }
+];
+
+let siteConfig = {
+  brandName: 'STREETONE | ONE SHOT PHOTOGRAPH',
+  heroTitle: 'CAPTURANDO HISTORIAS EN CADA DISPARO',
+  aboutTitle: 'SOBRE MÍ',
+  aboutRole: 'Fotógrafo Automotriz, Urbano & Comercial',
+  aboutBio1: 'Especialista en fotografía automotriz, urbana y comercial, capturando la esencia, el carácter y el movimiento en cada encuadre.',
+  aboutBio2: 'Comprometido con la excelencia visual y el detalle técnico para marcas, eventos, proyectos inmobiliarios y entusiastas del motor.',
+  aboutPhoto: 'assets/img/perfil.jpg',
+  whatsappNumber: '18296532377',
+  instagramUrl: 'https://www.instagram.com/streetone_01/',
+  categories: ['Automóviles', 'Urbano', 'Retratos', 'Lifestyle'],
+  theme: { accentColor: '#f2b705' }
+};
+
+let photosList = [];
+let inquiriesList = [];
+let isLocalAdminLoggedIn = sessionStorage.getItem('s1_ghpages_admin_session') === 'true';
+let batchQueue = [];
+let selectedPublicCategory = 'ALL';
+let selectedInquiryFilter = 'ALL';
+let pollingInterval = null;
+let isSubmittingInquiry = false;
+
+let carouselInterval = null;
+let isCarouselPaused = false;
+
+document.getElementById('currentCopyrightYear').textContent = new Date().getFullYear();
+
+function isAuthenticated() {
+  return isLocalAdminLoggedIn;
+}
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  const borderClass = type === 'error' ? 'border-red-500 text-red-200' : 'border-[#f2b705]/50 text-white';
+  t.className = `bg-[#141416] border ${borderClass} p-3.5 rounded-xl text-xs shadow-2xl animate-fade-up`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function compressImageToDataUrl(file, maxDimension = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadLocalData() {
+  const savedCfg = localStorage.getItem(LS_CONFIG_KEY);
+  if (savedCfg) {
+    try { siteConfig = { ...siteConfig, ...JSON.parse(savedCfg) }; } catch (e) {}
+  }
+
+  const savedPhotos = localStorage.getItem(LS_PHOTOS_KEY);
+  if (savedPhotos) {
+    try { photosList = JSON.parse(savedPhotos); } catch (e) { photosList = [...STATIC_INITIAL_PHOTOS]; }
+  } else {
+    photosList = [...STATIC_INITIAL_PHOTOS];
+  }
+
+  const savedInq = localStorage.getItem(LS_INQUIRIES_KEY);
+  if (savedInq) {
+    try { inquiriesList = JSON.parse(savedInq); } catch (e) { inquiriesList = []; }
+  }
+}
+
+function saveLocalData() {
+  try { localStorage.setItem(LS_CONFIG_KEY, JSON.stringify(siteConfig)); } catch (e) {}
+  try { localStorage.setItem(LS_PHOTOS_KEY, JSON.stringify(photosList)); } catch (e) {}
+  try { localStorage.setItem(LS_INQUIRIES_KEY, JSON.stringify(inquiriesList)); } catch (e) {}
+}
+
+function initPortfolio() {
+  loadLocalData();
+  renderPublicSite();
+  if (isAuthenticated()) {
+    document.getElementById('floatingReturnAdminBtn').classList.remove('hidden');
+    startNotificationsPolling();
+  }
+}
+
+// =========================================================================
+// AUTENTICACIÓN ADMINISTRADOR
+// =========================================================================
+function openAuthModal() {
+  if (isAuthenticated()) {
+    openDashboard();
+    return;
+  }
+
+  const modal = document.getElementById('authModal');
+  const regForm = document.getElementById('registerAdminForm');
+  const logForm = document.getElementById('loginAdminForm');
+
+  document.getElementById('regErrorMsg').classList.add('hidden');
+  document.getElementById('loginErrorMsg').classList.add('hidden');
+  regForm.classList.add('hidden');
+  logForm.classList.add('hidden');
+
+  const localAdmin = localStorage.getItem(LS_ADMIN_KEY);
+  if (!localAdmin) regForm.classList.remove('hidden');
+  else logForm.classList.remove('hidden');
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+document.getElementById('headerLogoTrigger').addEventListener('dblclick', openAuthModal);
+document.getElementById('closeAuthModalBtn').addEventListener('click', () => {
+  document.getElementById('authModal').classList.add('hidden');
+  document.getElementById('authModal').classList.remove('flex');
+});
+
+document.getElementById('registerAdminForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('regAdminName').value.trim();
+  const email = document.getElementById('regAdminEmail').value.trim();
+  const password = document.getElementById('regAdminPassword').value;
+
+  localStorage.setItem(LS_ADMIN_KEY, JSON.stringify({ name, email: email.toLowerCase(), password }));
+  isLocalAdminLoggedIn = true;
+  sessionStorage.setItem('s1_ghpages_admin_session', 'true');
+
+  document.getElementById('authModal').classList.add('hidden');
+  document.getElementById('authModal').classList.remove('flex');
+  showToast(`¡Bienvenido, ${name}! Cuenta creada.`);
+  startNotificationsPolling();
+  openDashboard();
+});
+
+document.getElementById('loginAdminForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginAdminEmail').value.trim();
+  const password = document.getElementById('loginAdminPassword').value;
+  const errBox = document.getElementById('loginErrorMsg');
+
+  errBox.classList.add('hidden');
+  const saved = JSON.parse(localStorage.getItem(LS_ADMIN_KEY) || 'null');
+
+  if (!saved || saved.email !== email.toLowerCase() || saved.password !== password) {
+    errBox.textContent = 'Correo o contraseña incorrectos.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  isLocalAdminLoggedIn = true;
+  sessionStorage.setItem('s1_ghpages_admin_session', 'true');
+  document.getElementById('authModal').classList.add('hidden');
+  document.getElementById('authModal').classList.remove('flex');
+  showToast('Sesión administrativa iniciada');
+  startNotificationsPolling();
+  openDashboard();
+});
+
+document.getElementById('logoutAdminBtn').addEventListener('click', () => {
+  isLocalAdminLoggedIn = false;
+  sessionStorage.removeItem('s1_ghpages_admin_session');
+  if (pollingInterval) clearInterval(pollingInterval);
+  document.getElementById('adminDashboard').classList.add('hidden');
+  document.getElementById('floatingReturnAdminBtn').classList.add('hidden');
+  showToast('Sesión cerrada');
+});
+
+function openDashboard() {
+  if (!isAuthenticated()) return;
+  document.getElementById('adminDashboard').classList.remove('hidden');
+  document.getElementById('adminDashboard').classList.add('flex');
+  document.getElementById('floatingReturnAdminBtn').classList.add('hidden');
+  populateAdminForms();
+  renderAdminGallery();
+  renderAdminCategories();
+  fetchAdminInquiries();
+}
+
+document.getElementById('minimizeAdminBtn').addEventListener('click', () => {
+  document.getElementById('adminDashboard').classList.add('hidden');
+  document.getElementById('floatingReturnAdminBtn').classList.remove('hidden');
+});
+document.getElementById('minimizeAdminBtnDesktop').addEventListener('click', () => {
+  document.getElementById('adminDashboard').classList.add('hidden');
+  document.getElementById('floatingReturnAdminBtn').classList.remove('hidden');
+});
+document.getElementById('floatingReturnAdminBtn').addEventListener('click', openDashboard);
+
+document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.admin-nav-btn').forEach(b => {
+      b.classList.remove('bg-[#f2b705]', 'text-[#0b0b0c]');
+      b.classList.add('text-zinc-300');
+    });
+    btn.classList.add('bg-[#f2b705]', 'text-[#0b0b0c]');
+    btn.classList.remove('text-zinc-300');
+    document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.add('hidden'));
+    document.getElementById(`tab-${btn.getAttribute('data-admin-tab')}`).classList.remove('hidden');
+  });
+});
+
+// =========================================================================
+// FORMULARIO PÚBLICO DE AGENDA & NOTIFICACIONES EN TIEMPO REAL
+// =========================================================================
+function showInquiryFeedback(msg, isSuccess = true) {
+  const box = document.getElementById('inquiryFeedbackBox');
+  box.textContent = msg;
+  box.className = `p-4 rounded-xl text-xs font-medium leading-relaxed ${
+    isSuccess
+      ? 'bg-emerald-950/60 border border-emerald-600/50 text-emerald-200'
+      : 'bg-red-950/60 border border-red-600/50 text-red-200'
+  }`;
+  box.classList.remove('hidden');
+}
+
+async function handleInquirySubmission(alsoOpenWhatsapp = false) {
+  if (isSubmittingInquiry) return;
+
+  const fullName = document.getElementById('inqFullName').value.trim();
+  const phone = document.getElementById('inqPhone').value.trim();
+  const email = document.getElementById('inqEmail').value.trim();
+  const service = document.getElementById('inqService').value;
+  const eventDate = document.getElementById('inqDate').value;
+  const message = document.getElementById('inqMessage').value.trim();
+
+  if (fullName.length < 2) return showInquiryFeedback('Por favor ingresa tu nombre completo.', false);
+  if (phone.replace(/\D/g, '').length < 7) return showInquiryFeedback('Por favor ingresa un número de contacto válido.', false);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showInquiryFeedback('Por favor ingresa un correo electrónico válido.', false);
+  if (message.length < 5) return showInquiryFeedback('Por favor escribe una breve descripción de tu solicitud.', false);
+
+  isSubmittingInquiry = true;
+  const btn = document.getElementById('submitInquiryBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando solicitud...';
+
+  const newInquiry = {
+    id: 'inq_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    fullName, phone, email, service,
+    eventDate: eventDate || 'Por definir',
+    message,
+    read: false,
+    createdAt: Date.now()
+  };
+
+  inquiriesList.unshift(newInquiry);
+  saveLocalData();
+
+  document.getElementById('publicInquiryForm').reset();
+  showInquiryFeedback('¡Solicitud enviada con éxito! Hemos recibido tu consulta y nos pondremos en contacto muy pronto.', true);
+  showToast('¡Consulta enviada correctamente!');
+  if (isAuthenticated()) fetchAdminInquiries();
+
+  if (alsoOpenWhatsapp) {
+    const waText = `¡Hola! Acabo de enviar una consulta en *${siteConfig.brandName}*:%0n%0n` +
+                   `👤 *Nombre:* ${encodeURIComponent(fullName)}%0n` +
+                   `📱 *Contacto:* ${encodeURIComponent(phone)}%0n` +
+                   `📧 *Correo:* ${encodeURIComponent(email)}%0n` +
+                   `📷 *Servicio:* ${encodeURIComponent(service)}%0n` +
+                   `📅 *Fecha:* ${encodeURIComponent(eventDate || 'Por definir')}%0n` +
+                   `📝 *Mensaje:* ${encodeURIComponent(message)}`;
+    window.open(`https://wa.me/${siteConfig.whatsappNumber}?text=${waText}`, '_blank', 'noopener,noreferrer');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Enviar Solicitud de Consulta';
+  setTimeout(() => { isSubmittingInquiry = false; }, 1200);
+}
+
+document.getElementById('publicInquiryForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  handleInquirySubmission(false);
+});
+document.getElementById('sendAndWhatsappBtn').addEventListener('click', () => handleInquirySubmission(true));
+
+function fetchAdminInquiries(notifyIfNew = false) {
+  if (!isAuthenticated()) return;
+  const saved = localStorage.getItem(LS_INQUIRIES_KEY);
+  if (saved) {
+    try {
+      const freshList = JSON.parse(saved);
+      const prevUnread = inquiriesList.filter(i => !i.read).length;
+      const nextUnread = freshList.filter(i => !i.read).length;
+      if (notifyIfNew && nextUnread > prevUnread) {
+        showToast('🔔 ¡Nueva solicitud de cliente recibida!');
+      }
+      inquiriesList = freshList;
+    } catch (e) {}
+  }
+  renderAdminInquiries();
+}
+
+function startNotificationsPolling() {
+  fetchAdminInquiries(false);
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(() => fetchAdminInquiries(true), 8000);
+}
+
+function renderAdminInquiries() {
+  const unreadCount = inquiriesList.filter(i => !i.read).length;
+  document.getElementById('pendingCountHeader').textContent = unreadCount;
+  document.getElementById('totalInquiriesHeader').textContent = inquiriesList.length;
+
+  const sideBadge = document.getElementById('sidebarUnreadBadge');
+  const floatBadge = document.getElementById('floatingUnreadBadge');
+
+  if (unreadCount > 0) {
+    sideBadge.textContent = unreadCount;
+    sideBadge.classList.remove('hidden');
+    floatBadge.textContent = unreadCount;
+    floatBadge.classList.remove('hidden');
+  } else {
+    sideBadge.classList.add('hidden');
+    floatBadge.classList.add('hidden');
+  }
+
+  const container = document.getElementById('adminInquiriesList');
+  container.innerHTML = '';
+
+  const filtered = inquiriesList.filter(item => {
+    if (selectedInquiryFilter === 'UNREAD') return !item.read;
+    if (selectedInquiryFilter === 'READ') return item.read;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="bg-[#141416] border border-zinc-800 rounded-2xl p-10 text-center text-zinc-500 text-sm">No hay solicitudes en esta vista.</div>`;
+    return;
+  }
+
+  filtered.forEach(inq => {
+    const dateStr = new Date(Number(inq.createdAt)).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' });
+    const card = document.createElement('div');
+    card.className = `p-5 rounded-2xl border transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+      !inq.read ? 'bg-[#18181c] border-[#f2b705]/60 shadow-lg' : 'bg-[#141416] border-zinc-800/80 opacity-85 hover:opacity-100'
+    }`;
+
+    card.innerHTML = `
+      <div class="space-y-1.5">
+        <div class="flex flex-wrap items-center gap-2">
+          ${!inq.read
+            ? '<span class="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider">Nueva</span>'
+            : '<span class="px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">Leída</span>'}
+          <span class="text-xs font-bold accent-text uppercase tracking-wider">${inq.service}</span>
+          <span class="text-[11px] text-zinc-500">• ${dateStr}</span>
+        </div>
+        <h4 class="font-display text-2xl text-white">${inq.fullName}</h4>
+        <p class="text-xs text-zinc-300 line-clamp-1">${inq.message}</p>
+        <p class="text-[11px] text-zinc-400">📱 ${inq.phone} &nbsp;|&nbsp; 📧 ${inq.email} &nbsp;|&nbsp; 📅 Fecha interés: ${inq.eventDate || 'Por definir'}</p>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-[#f2b705] hover:text-[#0b0b0c] text-xs font-bold uppercase tracking-wider transition">Ver Detalle</button>
+      </div>
+    `;
+    card.onclick = () => openInquiryDetailModal(inq);
+    container.appendChild(card);
+  });
+}
+
+document.querySelectorAll('.inq-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.inq-filter-btn').forEach(b => {
+      b.classList.remove('accent-bg');
+      b.classList.add('bg-zinc-800', 'text-zinc-300');
+    });
+    btn.classList.add('accent-bg');
+    btn.classList.remove('bg-zinc-800', 'text-zinc-300');
+    selectedInquiryFilter = btn.getAttribute('data-inq-filter');
+    renderAdminInquiries();
+  });
+});
+
+function openInquiryDetailModal(inq) {
+  const modal = document.getElementById('inquiryDetailModal');
+  const badge = document.getElementById('inqDetailStatusBadge');
+  const toggleBtn = document.getElementById('inqToggleReadBtn');
+
+  badge.textContent = inq.read ? 'Leída' : 'Pendiente / Nueva';
+  badge.className = `inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1.5 ${
+    inq.read ? 'bg-zinc-800 text-zinc-300' : 'bg-red-600 text-white'
+  }`;
+
+  document.getElementById('inqDetailName').textContent = inq.fullName;
+  document.getElementById('inqDetailDateReceived').textContent = `Recibida el ${new Date(Number(inq.createdAt)).toLocaleString('es-DO')}`;
+  document.getElementById('inqDetailPhone').textContent = inq.phone;
+  document.getElementById('inqDetailEmail').textContent = inq.email;
+  document.getElementById('inqDetailService').textContent = inq.service;
+  document.getElementById('inqDetailEventDate').textContent = inq.eventDate || 'Por definir';
+  document.getElementById('inqDetailMessage').textContent = inq.message;
+
+  const cleanClientPhone = inq.phone.replace(/\D/g, '');
+  const waReplyMsg = `Hola ${encodeURIComponent(inq.fullName)}, te saludamos de *${siteConfig.brandName}* en respuesta a tu consulta sobre *${encodeURIComponent(inq.service)}*.`;
+  document.getElementById('inqReplyWhatsappBtn').href = `https://wa.me/${cleanClientPhone}?text=${waReplyMsg}`;
+
+  if (!inq.read) {
+    updateInquiryStatus(inq.id, true);
+    inq.read = true;
+    badge.textContent = 'Leída';
+    badge.className = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1.5 bg-zinc-800 text-zinc-300';
+  }
+
+  toggleBtn.textContent = inq.read ? 'Marcar como Pendiente' : 'Marcar como Leída';
+
+  toggleBtn.onclick = () => {
+    const nextState = !inq.read;
+    updateInquiryStatus(inq.id, nextState);
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    showToast(nextState ? 'Marcada como leída' : 'Marcada como pendiente');
+  };
+
+  document.getElementById('inqDeleteBtn').onclick = () => {
+    inquiriesList = inquiriesList.filter(i => i.id !== inq.id);
+    saveLocalData();
+    renderAdminInquiries();
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    showToast('Solicitud eliminada');
+  };
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+document.getElementById('closeInqDetailBtn').addEventListener('click', () => {
+  document.getElementById('inquiryDetailModal').classList.add('hidden');
+  document.getElementById('inquiryDetailModal').classList.remove('flex');
+});
+
+function updateInquiryStatus(id, isRead) {
+  inquiriesList = inquiriesList.map(i => i.id === id ? { ...i, read: isRead } : i);
+  saveLocalData();
+  renderAdminInquiries();
+}
+
+// =========================================================================
+// SUBIDA DE FOTOS
+// =========================================================================
+const dropZone = document.getElementById('batchDropZone');
+const fileInput = document.getElementById('batchFileInput');
+dropZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  batchQueue = [];
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
+
+  files.forEach((file, idx) => {
+    batchQueue.push({
+      id: 'photo_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 6),
+      file,
+      previewUrl: URL.createObjectURL(file),
+      title: file.name.replace(/\.[^/.]+$/, ''),
+      category: siteConfig.categories[0] || 'Automóviles',
+      location: '',
+      description: '',
+      createdAt: Date.now() + idx
+    });
+  });
+  renderBatchQueue();
+});
+
+document.getElementById('applyBulkMetadataBtn').addEventListener('click', () => {
+  if (batchQueue.length === 0) return;
+  const bulkTitle = document.getElementById('bulkTitleInput').value.trim();
+  const bulkCategory = document.getElementById('bulkCategorySelect').value;
+  const bulkDesc = document.getElementById('bulkDescInput').value.trim();
+  const useNumbering = document.getElementById('bulkNumberingCheck').checked;
+
+  batchQueue.forEach((item, index) => {
+    if (bulkTitle) item.title = useNumbering && batchQueue.length > 1 ? `${bulkTitle} #${index + 1}` : bulkTitle;
+    if (bulkCategory) item.category = bulkCategory;
+    if (bulkDesc) item.description = bulkDesc;
+  });
+  renderBatchQueue();
+  showToast('Datos aplicados a todas las fotos');
+});
+
+function renderBatchQueue() {
+  const container = document.getElementById('batchItemsContainer');
+  const controlsBar = document.getElementById('batchControlsBar');
+  const bulkCategorySelect = document.getElementById('bulkCategorySelect');
+
+  bulkCategorySelect.innerHTML = siteConfig.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  container.innerHTML = '';
+
+  if (batchQueue.length > 0) {
+    controlsBar.classList.remove('hidden');
+    document.getElementById('batchQueueCountLabel').textContent = `${batchQueue.length} foto(s) lista(s)`;
+  } else {
+    controlsBar.classList.add('hidden');
+    return;
+  }
+
+  batchQueue.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'bg-[#141416] border border-zinc-800 rounded-2xl p-5 flex flex-col md:flex-row gap-5 items-start';
+    div.innerHTML = `
+      <img src="${item.previewUrl}" class="w-full md:w-36 h-36 object-cover rounded-xl border border-zinc-800 shrink-0" />
+      <div class="flex-1 w-full space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Nombre Individual</label>
+            <input type="text" value="${item.title}" oninput="updateBatchItem(${index}, 'title', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Categoría</label>
+            <select onchange="updateBatchItem(${index}, 'category', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white">
+              ${siteConfig.categories.map(c => `<option value="${c}" ${c === item.category ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Ubicación</label>
+            <input type="text" value="${item.location}" placeholder="Ej: San Juan" oninput="updateBatchItem(${index}, 'location', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Descripción de la Foto</label>
+          <textarea rows="2" placeholder="Describe la toma, cámara, lente o historia..." oninput="updateBatchItem(${index}, 'description', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white">${item.description}</textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="button" onclick="removeBatchItem(${index})" class="text-xs text-red-400 hover:text-red-300">Quitar</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+window.updateBatchItem = (i, f, v) => { batchQueue[i][f] = v; };
+window.removeBatchItem = (i) => { batchQueue.splice(i, 1); renderBatchQueue(); };
+
+document.getElementById('publishBatchBtn').addEventListener('click', async () => {
+  if (!isAuthenticated() || batchQueue.length === 0) return;
+
+  const btn = document.getElementById('publishBatchBtn');
+  btn.disabled = true;
+
+  for (let i = 0; i < batchQueue.length; i++) {
+    const item = batchQueue[i];
+    btn.textContent = `Procesando ${i + 1} de ${batchQueue.length}...`;
+    const imageUrl = await compressImageToDataUrl(item.file, 1600, 0.82);
+
+    photosList.unshift({
+      id: item.id,
+      title: item.title || 'Sin título',
+      category: item.category,
+      location: item.location,
+      description: item.description,
+      imageUrl,
+      createdAt: item.createdAt
+    });
+  }
+
+  saveLocalData();
+  renderPublicSite();
+  batchQueue = [];
+  fileInput.value = '';
+  document.getElementById('batchControlsBar').classList.add('hidden');
+  renderAdminGallery();
+  btn.disabled = false;
+  btn.textContent = 'Publicar Ahora';
+  showToast('¡Fotografías publicadas!');
+});
+
+// =========================================================================
+// RENDERIZADO PÚBLICO Y CARRUSEL
+// =========================================================================
+function stopCategoryCarousel() {
+  if (carouselInterval) {
+    clearInterval(carouselInterval);
+    carouselInterval = null;
+  }
+}
+
+function startCategoryCarousel(viewportEl) {
+  stopCategoryCarousel();
+  if (!viewportEl) return;
+  carouselInterval = setInterval(() => {
+    if (isCarouselPaused) return;
+    const maxScroll = viewportEl.scrollWidth - viewportEl.clientWidth;
+    if (maxScroll <= 0) return;
+    if (viewportEl.scrollLeft + 360 >= maxScroll - 5) {
+      viewportEl.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      viewportEl.scrollBy({ left: 360, behavior: 'smooth' });
+    }
+  }, 2800);
+}
+
+function openPhotoLightbox(photo) {
+  document.getElementById('lbImage').src = photo.imageUrl;
+  document.getElementById('lbCategory').textContent = photo.category;
+  document.getElementById('lbTitle').textContent = photo.title;
+  document.getElementById('lbMeta').textContent = photo.location ? `📍 ${photo.location}` : '';
+  document.getElementById('lbDescription').textContent = photo.description || 'Sin descripción adicional.';
+  document.getElementById('lightboxModal').classList.remove('hidden');
+  document.getElementById('lightboxModal').classList.add('flex');
+}
+
+function createPhotoCardElement(photo, index, isCarousel = false) {
+  const card = document.createElement('div');
+  card.className = `viewfinder-card rounded-xl cursor-pointer aspect-[4/5] shadow-lg ${isCarousel ? 'carousel-slide-card' : 'animate-fade-up'}`;
+  if (isCarousel) card.style.animationDelay = `${Math.min(index * 80, 600)}ms`;
+
+  card.innerHTML = `
+    <div class="viewfinder-corner"></div>
+    <img src="${photo.imageUrl}" alt="${photo.title}" loading="lazy" class="w-full h-full object-cover transition duration-500 hover:scale-105" />
+    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 hover:opacity-100 transition duration-300 flex flex-col justify-end p-5">
+      <span class="text-[11px] uppercase tracking-widest accent-text font-semibold">${photo.category}</span>
+      <h3 class="font-display text-2xl text-white">${photo.title}</h3>
+      ${photo.location ? `<p class="text-xs text-zinc-300 mt-0.5">📍 ${photo.location}</p>` : ''}
+      ${photo.description ? `<p class="text-xs text-zinc-400 mt-1 line-clamp-2">${photo.description}</p>` : ''}
+    </div>
+  `;
+  card.onclick = () => openPhotoLightbox(photo);
+  return card;
+}
+
+function renderPublicSite() {
+  document.getElementById('pubBrandNameHeader').textContent = siteConfig.brandName;
+  document.getElementById('footerBrandName').textContent = siteConfig.brandName;
+  document.getElementById('pubHeroTitle').textContent = siteConfig.heroTitle;
+  document.getElementById('pubAboutTitle').textContent = siteConfig.aboutTitle;
+  document.getElementById('pubAboutRole').textContent = siteConfig.aboutRole || 'Fotógrafo Automotriz, Urbano & Comercial';
+  document.getElementById('pubAboutBio1').textContent = siteConfig.aboutBio1;
+  document.getElementById('pubAboutBio2').textContent = siteConfig.aboutBio2;
+  document.getElementById('pubAboutPhoto').src = siteConfig.aboutPhoto || 'assets/img/perfil.jpg';
+
+  const cleanWa = (siteConfig.whatsappNumber || '18296532377').replace(/\D/g, '');
+  const waHref = `https://wa.me/${cleanWa}`;
+  document.getElementById('headerWhatsappBtn').href = waHref;
+  document.getElementById('headerWhatsappMobileBtn').href = waHref;
+  document.getElementById('pubWhatsappBtn').href = waHref;
+
+  const igUrl = siteConfig.instagramUrl || 'https://www.instagram.com/streetone_01/';
+  document.getElementById('pubInstagramBtn').href = igUrl;
+  document.getElementById('headerInstagramBtn').href = igUrl;
+  document.getElementById('headerInstagramMobileBtn').href = igUrl;
+
+  document.documentElement.style.setProperty('--accent-color', siteConfig.theme?.accentColor || '#f2b705');
+
+  const filtersContainer = document.getElementById('publicCategoryFilters');
+  let filtersHtml = `<button onclick="setPublicCategory('ALL')" class="px-4 py-2 rounded-xl text-xs font-semibold uppercase transition ${selectedPublicCategory === 'ALL' ? 'accent-bg' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}">Todas</button>`;
+  siteConfig.categories.forEach(cat => {
+    filtersHtml += `<button onclick="setPublicCategory('${cat}')" class="px-4 py-2 rounded-xl text-xs font-semibold uppercase transition ${selectedPublicCategory === cat ? 'accent-bg' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}">${cat}</button>`;
+  });
+  filtersContainer.innerHTML = filtersHtml;
+
+  const galleryContainer = document.getElementById('publicGalleryContainer');
+  const controlsEl = document.getElementById('categoryCarouselControls');
+  stopCategoryCarousel();
+  galleryContainer.innerHTML = '';
+
+  const filteredPhotos = selectedPublicCategory === 'ALL'
+    ? photosList
+    : photosList.filter(p => p.category === selectedPublicCategory);
+
+  if (filteredPhotos.length === 0) {
+    controlsEl.classList.add('hidden');
+    controlsEl.classList.remove('flex');
+    galleryContainer.innerHTML = `<div class="py-16 text-center text-zinc-500 text-sm">No hay fotografías publicadas en esta categoría todavía.</div>`;
+    return;
+  }
+
+  if (selectedPublicCategory !== 'ALL') {
+    controlsEl.classList.remove('hidden');
+    controlsEl.classList.add('flex');
+    document.getElementById('carouselActiveLabel').textContent = `Categoría: ${selectedPublicCategory} (${filteredPhotos.length} fotos)`;
+
+    const viewport = document.createElement('div');
+    viewport.className = 'category-carousel-viewport';
+    const track = document.createElement('div');
+    track.className = 'category-carousel-track';
+
+    filteredPhotos.forEach((photo, idx) => track.appendChild(createPhotoCardElement(photo, idx, true)));
+    viewport.appendChild(track);
+    galleryContainer.appendChild(viewport);
+
+    viewport.addEventListener('mouseenter', () => { isCarouselPaused = true; });
+    viewport.addEventListener('mouseleave', () => { isCarouselPaused = false; });
+    document.getElementById('carouselPrevBtn').onclick = () => viewport.scrollBy({ left: -360, behavior: 'smooth' });
+    document.getElementById('carouselNextBtn').onclick = () => viewport.scrollBy({ left: 360, behavior: 'smooth' });
+
+    const playPauseBtn = document.getElementById('carouselPlayPauseBtn');
+    isCarouselPaused = false;
+    playPauseBtn.textContent = 'Pausar';
+    playPauseBtn.onclick = () => {
+      isCarouselPaused = !isCarouselPaused;
+      playPauseBtn.textContent = isCarouselPaused ? 'Reanudar' : 'Pausar';
+    };
+
+    startCategoryCarousel(viewport);
+  } else {
+    controlsEl.classList.add('hidden');
+    controlsEl.classList.remove('flex');
+    const grid = document.createElement('div');
+    grid.id = 'publicGalleryGrid';
+    grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7';
+    filteredPhotos.forEach((photo, idx) => grid.appendChild(createPhotoCardElement(photo, idx, false)));
+    galleryContainer.appendChild(grid);
+  }
+}
+
+window.setPublicCategory = function(cat) {
+  selectedPublicCategory = cat;
+  renderPublicSite();
+};
+
+// =========================================================================
+// ADMIN GALERÍA, CATEGORÍAS, PERFIL Y CONFIGURACIÓN
+// =========================================================================
+function populateAdminForms() {
+  document.getElementById('cfgBrandName').value = siteConfig.brandName;
+  document.getElementById('cfgHeroTitle').value = siteConfig.heroTitle;
+  document.getElementById('cfgAboutTitle').value = siteConfig.aboutTitle;
+  document.getElementById('cfgAboutRole').value = siteConfig.aboutRole || '';
+  document.getElementById('cfgAboutBio1').value = siteConfig.aboutBio1;
+  document.getElementById('cfgAboutBio2').value = siteConfig.aboutBio2 || '';
+  document.getElementById('adminAboutPreview').src = siteConfig.aboutPhoto || 'assets/img/perfil.jpg';
+  document.getElementById('cfgWhatsappNumber').value = siteConfig.whatsappNumber;
+  document.getElementById('cfgInstagramUrl').value = siteConfig.instagramUrl || 'https://www.instagram.com/streetone_01/';
+  document.getElementById('cfgAccentColor').value = siteConfig.theme?.accentColor || '#f2b705';
+}
+
+function renderAdminGallery() {
+  const grid = document.getElementById('adminGalleryGrid');
+  grid.innerHTML = '';
+  photosList.forEach(photo => {
+    const div = document.createElement('div');
+    div.className = 'bg-[#0b0b0c] border border-zinc-800 rounded-xl p-3 flex flex-col justify-between';
+    div.innerHTML = `
+      <div>
+        <img src="${photo.imageUrl}" class="w-full h-32 object-cover rounded-lg mb-2"/>
+        <h4 class="text-xs text-white font-semibold truncate">${photo.title}</h4>
+        <span class="text-[10px] accent-text uppercase tracking-wider block">${photo.category}</span>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <button onclick="openEditPhoto('${photo.id}')" class="w-full py-1.5 bg-zinc-800 text-zinc-200 text-xs rounded-lg hover:bg-[#f2b705] hover:text-[#0b0b0c] transition">Editar</button>
+        <button onclick="deletePhoto('${photo.id}')" class="w-full py-1.5 bg-red-500/20 text-red-400 text-xs rounded-lg hover:bg-red-600 hover:text-white transition">Borrar</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+window.openEditPhoto = (id) => {
+  const photo = photosList.find(p => p.id === id);
+  if (!photo) return;
+  document.getElementById('editPhotoId').value = photo.id;
+  document.getElementById('editPhotoTitle').value = photo.title || '';
+  document.getElementById('editPhotoLocation').value = photo.location || '';
+  document.getElementById('editPhotoDesc').value = photo.description || '';
+  document.getElementById('editPhotoCategory').innerHTML = siteConfig.categories.map(c => `<option value="${c}" ${c === photo.category ? 'selected' : ''}>${c}</option>`).join('');
+  document.getElementById('editPhotoModal').classList.remove('hidden');
+  document.getElementById('editPhotoModal').classList.add('flex');
+};
+
+document.getElementById('cancelEditPhotoBtn').addEventListener('click', () => {
+  document.getElementById('editPhotoModal').classList.add('hidden');
+  document.getElementById('editPhotoModal').classList.remove('flex');
+});
+
+document.getElementById('saveEditPhotoBtn').addEventListener('click', () => {
+  const id = document.getElementById('editPhotoId').value;
+  const updated = {
+    id,
+    title: document.getElementById('editPhotoTitle').value.trim(),
+    category: document.getElementById('editPhotoCategory').value,
+    location: document.getElementById('editPhotoLocation').value.trim(),
+    description: document.getElementById('editPhotoDesc').value.trim()
+  };
+  photosList = photosList.map(p => p.id === id ? { ...p, ...updated } : p);
+  saveLocalData();
+  document.getElementById('editPhotoModal').classList.add('hidden');
+  document.getElementById('editPhotoModal').classList.remove('flex');
+  renderPublicSite();
+  renderAdminGallery();
+  showToast('Fotografía actualizada');
+});
+
+window.deletePhoto = (id) => {
+  photosList = photosList.filter(p => p.id !== id);
+  saveLocalData();
+  renderPublicSite();
+  renderAdminGallery();
+  showToast('Fotografía eliminada');
+};
+
+function renderAdminCategories() {
+  const list = document.getElementById('adminCategoriesList');
+  list.innerHTML = siteConfig.categories.map(c => `
+    <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-800 text-xs text-white rounded-lg">
+      <span>${c}</span>
+      ${siteConfig.categories.length > 1 ? `<button type="button" onclick="removeCategory('${c}')" class="text-zinc-400 hover:text-red-400 font-bold">×</button>` : ''}
+    </span>
+  `).join('');
+}
+
+window.removeCategory = (catName) => {
+  siteConfig.categories = siteConfig.categories.filter(c => c !== catName);
+  saveLocalData();
+  renderPublicSite();
+  renderAdminCategories();
+  showToast('Categoría eliminada');
+};
+
+document.getElementById('textsSettingsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('saveTextsBtn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  siteConfig.brandName = document.getElementById('cfgBrandName').value.trim();
+  siteConfig.heroTitle = document.getElementById('cfgHeroTitle').value.trim();
+  siteConfig.aboutTitle = document.getElementById('cfgAboutTitle').value.trim();
+  siteConfig.aboutRole = document.getElementById('cfgAboutRole').value.trim();
+  siteConfig.aboutBio1 = document.getElementById('cfgAboutBio1').value.trim();
+  siteConfig.aboutBio2 = document.getElementById('cfgAboutBio2').value.trim();
+
+  const aboutFile = document.getElementById('cfgAboutPhotoInput').files[0];
+  if (aboutFile) {
+    siteConfig.aboutPhoto = await compressImageToDataUrl(aboutFile, 1000, 0.84);
+    document.getElementById('adminAboutPreview').src = siteConfig.aboutPhoto;
+  }
+
+  saveLocalData();
+  renderPublicSite();
+  btn.disabled = false;
+  btn.textContent = 'Guardar Textos y Perfil';
+  showToast('Textos y perfil guardados');
+});
+
+document.getElementById('contactSettingsForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  siteConfig.whatsappNumber = document.getElementById('cfgWhatsappNumber').value.trim();
+  siteConfig.instagramUrl = document.getElementById('cfgInstagramUrl').value.trim();
+  saveLocalData();
+  renderPublicSite();
+  showToast('Contacto guardado');
+});
+
+document.getElementById('appearanceSettingsForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  siteConfig.theme.accentColor = document.getElementById('cfgAccentColor').value;
+  saveLocalData();
+  renderPublicSite();
+  showToast('Apariencia actualizada');
+});
+
+document.getElementById('addCategoryBtn').addEventListener('click', () => {
+  const val = document.getElementById('newCategoryInput').value.trim();
+  if (val && !siteConfig.categories.includes(val)) {
+    siteConfig.categories.push(val);
+    document.getElementById('newCategoryInput').value = '';
+    saveLocalData();
+    renderPublicSite();
+    renderAdminCategories();
+    showToast('Categoría añadida');
+  }
+});
+
+document.getElementById('deleteAllPhotosBtn').addEventListener('click', () => {
+  document.getElementById('confirmModal').classList.remove('hidden');
+  document.getElementById('confirmModal').classList.add('flex');
+  document.getElementById('confirmTitle').textContent = 'Vaciar Galería';
+  document.getElementById('confirmMessage').textContent = '¿Eliminar permanentemente todas las fotografías?';
+
+  document.getElementById('confirmAcceptBtn').onclick = () => {
+    photosList = [];
+    saveLocalData();
+    renderPublicSite();
+    renderAdminGallery();
+    document.getElementById('confirmModal').classList.add('hidden');
+    document.getElementById('confirmModal').classList.remove('flex');
+    showToast('Galería vaciada');
+  };
+});
+
+document.getElementById('confirmCancelBtn').addEventListener('click', () => {
+  document.getElementById('confirmModal').classList.add('hidden');
+  document.getElementById('confirmModal').classList.remove('flex');
+});
+
+document.getElementById('lbCloseBtn').addEventListener('click', () => {
+  document.getElementById('lightboxModal').classList.add('hidden');
+  document.getElementById('lightboxModal').classList.remove('flex');
+});
+
+initPortfolio();
