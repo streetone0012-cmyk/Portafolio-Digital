@@ -8,10 +8,114 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    :root {
+      --bg-primary: #0b0b0c;
+      --bg-secondary: #141416;
+      --charcoal: #1c1c1f;
+      --accent-color: #f2b705;
+      --text-primary: #f7f6f3;
+      --text-muted: #cfcdc7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Jost', sans-serif;
+      overflow-x: hidden;
+      margin: 0;
+    }
+    .font-display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; }
+    .accent-text { color: var(--accent-color); }
+    .accent-bg { background-color: var(--accent-color); color: #0b0b0c; }
+    .accent-border { border-color: var(--accent-color); }
+
+    /* Logo Diafragma Animado original */
+    .logo-aperture { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+    .logo-blade {
+      position: absolute; inset: 0; border: 2px solid var(--accent-color);
+      border-radius: 3px; transform-origin: center;
+      transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .logo-blade:nth-child(1) { transform: rotate(0deg) scale(0.62); }
+    .logo-blade:nth-child(2) { transform: rotate(60deg) scale(0.62); }
+    .logo-blade:nth-child(3) { transform: rotate(120deg) scale(0.62); }
+    .logo-blade:nth-child(4) { transform: rotate(30deg) scale(0.86); opacity: 0.55; }
+    .logo-blade:nth-child(5) { transform: rotate(90deg) scale(0.86); opacity: 0.55; }
+    .logo-blade:nth-child(6) { transform: rotate(150deg) scale(0.86); opacity: 0.55; }
+
+    .secret-logo-trigger:hover .logo-blade { transform: rotate(180deg) scale(0.52); }
+    .secret-logo-trigger { user-select: none; cursor: pointer; }
+
+    .viewfinder-card {
+      position: relative; overflow: hidden; background-color: var(--charcoal);
+      border: 1px solid rgba(247, 246, 243, 0.08);
+      transition: transform 0.4s ease, border-color 0.4s ease;
+    }
+    .viewfinder-card:hover { border-color: var(--accent-color); transform: translateY(-4px); }
+    .viewfinder-corner {
+      position: absolute; top: 14px; right: 14px; width: 20px; height: 20px;
+      border-top: 2px solid var(--accent-color); border-right: 2px solid var(--accent-color);
+      opacity: 0; transition: opacity 0.3s ease; z-index: 15; pointer-events: none;
+    }
+    .viewfinder-card:hover .viewfinder-corner { opacity: 1; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeSlideUp 0.4s ease forwards; }
+
+    /* Animación de Carrusel por Categoría */
+    .category-carousel-viewport {
+      position: relative;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+    }
+    .category-carousel-viewport::-webkit-scrollbar {
+      display: none;
+    }
+    .category-carousel-track {
+      display: flex;
+      gap: 1.5rem;
+      width: max-content;
+      padding: 0.5rem 0.25rem 1rem 0.25rem;
+    }
+    .carousel-slide-card {
+      width: 280px;
+      flex-shrink: 0;
+      animation: slideZoomIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @media (min-width: 640px) {
+      .carousel-slide-card { width: 320px; }
+    }
+    @media (min-width: 1024px) {
+      .carousel-slide-card { width: 350px; }
+    }
+    @keyframes slideZoomIn {
+      from {
+        opacity: 0;
+        transform: scale(0.94) translateX(24px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateX(0);
+      }
+    }
+
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #0b0b0c; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+  </style>
 </head>
 <body class="antialiased selection:bg-[#f2b705] selection:text-[#0b0b0c]">
 
+  <!-- NOTIFICACIONES TOAST -->
   <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none px-4"></div>
 
   <!-- MODAL DE CONFIRMACIÓN -->
@@ -22,52 +126,6 @@
       <div class="flex justify-end gap-3">
         <button id="confirmCancelBtn" type="button" class="px-4 py-2.5 rounded-xl bg-zinc-800 text-zinc-200 text-sm">Cancelar</button>
         <button id="confirmAcceptBtn" type="button" class="px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold">Confirmar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DETALLE DE NOTIFICACIÓN -->
-  <div id="inquiryDetailModal" class="fixed inset-0 z-[9996] hidden items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-    <div class="bg-[#141416] border border-zinc-800 rounded-2xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-2xl animate-fade-up">
-      <div class="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
-        <div>
-          <span id="inqDetailStatusBadge" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1.5"></span>
-          <h3 id="inqDetailName" class="font-display text-3xl text-white"></h3>
-          <p id="inqDetailDateReceived" class="text-xs text-zinc-400"></p>
-        </div>
-        <button id="closeInqDetailBtn" type="button" class="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center">✕</button>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-        <div class="bg-[#0b0b0c] p-3.5 rounded-xl border border-zinc-800/80">
-          <span class="text-zinc-500 uppercase block mb-1">Teléfono / WhatsApp</span>
-          <span id="inqDetailPhone" class="text-white font-semibold text-sm"></span>
-        </div>
-        <div class="bg-[#0b0b0c] p-3.5 rounded-xl border border-zinc-800/80">
-          <span class="text-zinc-500 uppercase block mb-1">Correo Electrónico</span>
-          <span id="inqDetailEmail" class="text-white font-semibold text-sm break-all"></span>
-        </div>
-        <div class="bg-[#0b0b0c] p-3.5 rounded-xl border border-zinc-800/80">
-          <span class="text-zinc-500 uppercase block mb-1">Servicio Solicitado</span>
-          <span id="inqDetailService" class="accent-text font-semibold text-sm"></span>
-        </div>
-        <div class="bg-[#0b0b0c] p-3.5 rounded-xl border border-zinc-800/80">
-          <span class="text-zinc-500 uppercase block mb-1">Fecha de Interés</span>
-          <span id="inqDetailEventDate" class="text-white font-semibold text-sm"></span>
-        </div>
-      </div>
-
-      <div class="bg-[#0b0b0c] p-4 rounded-xl border border-zinc-800/80">
-        <span class="text-[11px] text-zinc-500 uppercase block mb-1.5">Mensaje del Cliente</span>
-        <p id="inqDetailMessage" class="text-zinc-200 text-sm leading-relaxed whitespace-pre-line"></p>
-      </div>
-
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-        <a id="inqReplyWhatsappBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white text-xs font-bold uppercase tracking-wider transition">Responder por WhatsApp</a>
-        <div class="flex gap-2">
-          <button id="inqToggleReadBtn" type="button" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-[#f2b705] hover:text-[#0b0b0c] text-xs font-bold uppercase tracking-wider transition"></button>
-          <button id="inqDeleteBtn" type="button" class="px-4 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-bold uppercase tracking-wider transition">Eliminar</button>
-        </div>
       </div>
     </div>
   </div>
@@ -105,51 +163,39 @@
   <!-- MODAL AUTENTICACIÓN ADMIN -->
   <div id="authModal" class="fixed inset-0 z-[9990] hidden items-center justify-center bg-black/90 backdrop-blur-md p-4">
     <div class="bg-[#141416] border border-zinc-800 rounded-2xl max-w-md w-full p-7 relative shadow-2xl animate-fade-up">
-      <button id="closeAuthModalBtn" class="absolute top-5 right-5 text-zinc-400 hover:text-white text-lg">✕</button>
+      <button id="closeAuthModalBtn" class="absolute top-5 right-5 text-zinc-400 hover:text-white">✕</button>
       <div class="flex items-center gap-3 mb-6">
         <div class="w-11 h-11 rounded-xl accent-bg flex items-center justify-center font-display text-2xl font-bold">S1</div>
         <div>
           <span class="text-[11px] uppercase tracking-[0.2em] accent-text font-semibold">STREETONE | ONE SHOT</span>
-          <h2 class="font-display text-3xl text-white">ACCESO ADMINISTRADOR</h2>
+          <h2 class="font-display text-3xl text-white">PANEL ADMIN (NUBE)</h2>
         </div>
+      </div>
+
+      <div id="authCheckingState" class="py-6 text-center">
+        <div class="w-8 h-8 border-2 border-[#f2b705] border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-xs text-zinc-400 mt-2 uppercase tracking-widest">Conectando con Firebase...</p>
       </div>
 
       <form id="registerAdminForm" class="hidden space-y-4">
         <div class="p-3.5 rounded-xl bg-[#f2b705]/10 border border-[#f2b705]/30 text-xs text-zinc-200">
-          <strong>Registro Inicial:</strong> Crea tu cuenta administrativa para gestionar el portafolio.
+          Crea tu cuenta de administrador principal vinculada a Firebase en la nube.
         </div>
-        <div>
-          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Nombre del Administrador *</label>
-          <input id="regAdminName" type="text" placeholder="Ej: Gerald Sánchez" required minlength="2" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
-        </div>
-        <div>
-          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Correo Electrónico *</label>
-          <input id="regAdminEmail" type="email" placeholder="admin@streetone.com" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
-        </div>
-        <div>
-          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Contraseña Maestra *</label>
-          <input id="regAdminPassword" type="password" placeholder="Mínimo 6 caracteres" required minlength="6" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
-        </div>
-        <p id="regErrorMsg" class="text-red-400 text-xs hidden bg-red-950/40 border border-red-800/60 p-3 rounded-xl"></p>
-        <button id="regSubmitBtn" type="submit" class="w-full py-3.5 rounded-xl accent-bg font-bold text-xs uppercase tracking-wider">Registrar Administrador</button>
+        <input id="regUsername" type="text" placeholder="Usuario" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+        <input id="regPassword" type="password" placeholder="Contraseña maestra" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+        <button type="submit" class="w-full py-3.5 rounded-xl accent-bg font-bold text-xs uppercase">Registrar Administrador</button>
       </form>
 
       <form id="loginAdminForm" class="hidden space-y-4">
-        <div>
-          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Correo Electrónico *</label>
-          <input id="loginAdminEmail" type="email" placeholder="admin@streetone.com" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
-        </div>
-        <div>
-          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Contraseña *</label>
-          <input id="loginAdminPassword" type="password" placeholder="••••••••" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none" />
-        </div>
-        <p id="loginErrorMsg" class="text-red-400 text-xs hidden bg-red-950/40 border border-red-800/60 p-3 rounded-xl"></p>
-        <button id="loginSubmitBtn" type="submit" class="w-full py-3.5 rounded-xl accent-bg font-bold text-xs uppercase tracking-wider">Iniciar Sesión</button>
+        <input id="loginUsername" type="text" placeholder="Usuario" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+        <input id="loginPassword" type="password" placeholder="Contraseña" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+        <p id="loginErrorMsg" class="text-red-400 text-xs hidden"></p>
+        <button type="submit" class="w-full py-3.5 rounded-xl accent-bg font-bold text-xs uppercase">Iniciar Sesión</button>
       </form>
     </div>
   </div>
 
-  <!-- STUDIO DASHBOARD COMPLETO -->
+  <!-- STUDIO DASHBOARD COMPLETO (5 MÓDULOS) -->
   <div id="adminDashboard" class="fixed inset-0 z-[9900] hidden bg-[#09090b] text-white flex-col lg:flex-row overflow-hidden">
     <aside class="w-full lg:w-72 bg-[#111114] border-b lg:border-b-0 lg:border-r border-zinc-800 flex flex-col shrink-0">
       <div class="p-5 flex items-center justify-between border-b border-zinc-800">
@@ -157,18 +203,14 @@
           <div class="w-10 h-10 rounded-xl accent-bg flex items-center justify-center font-display text-2xl font-bold">S1</div>
           <div>
             <span class="font-display text-lg text-white leading-tight block">STREETONE | ONE SHOT</span>
-            <p class="text-xs text-emerald-400">GitHub Pages Studio</p>
+            <p class="text-xs text-zinc-400">Cloud Firebase Activo</p>
           </div>
         </div>
         <button id="minimizeAdminBtn" class="lg:hidden px-3 py-1.5 bg-zinc-800 text-xs rounded-lg">Ver Web</button>
       </div>
 
       <nav class="flex lg:flex-col gap-1.5 p-3 overflow-x-auto lg:overflow-y-auto flex-1">
-        <button type="button" data-admin-tab="notifications" class="admin-nav-btn flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-[#f2b705] text-[#0b0b0c]">
-          <span>0. Notificaciones & Citas</span>
-          <span id="sidebarUnreadBadge" class="hidden px-2 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-bold">0</span>
-        </button>
-        <button type="button" data-admin-tab="upload" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">1. Subir Fotos & Detalles</button>
+        <button type="button" data-admin-tab="upload" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-[#f2b705] text-[#0b0b0c]">1. Subir Fotos & Detalles</button>
         <button type="button" data-admin-tab="gallery" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">2. Galería & Categorías</button>
         <button type="button" data-admin-tab="texts" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">3. Textos & Perfil</button>
         <button type="button" data-admin-tab="contact" class="admin-nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-300 hover:bg-zinc-800">4. Contacto & Redes</button>
@@ -182,43 +224,17 @@
     </aside>
 
     <main class="flex-1 overflow-y-auto p-5 sm:p-8 lg:p-10 space-y-8">
-      <!-- MÓDULO 0: NOTIFICACIONES -->
-      <section id="tab-notifications" class="admin-tab-panel max-w-5xl mx-auto space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Bandeja de Entrada</span>
-            <h2 class="font-display text-3xl sm:text-4xl text-white mt-0.5">Notificaciones & Consultas</h2>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="bg-[#141416] border border-zinc-800 px-4 py-2 rounded-xl text-xs">
-              Pendientes: <span id="pendingCountHeader" class="font-bold text-red-400 text-sm">0</span>
-            </div>
-            <div class="bg-[#141416] border border-zinc-800 px-4 py-2 rounded-xl text-xs">
-              Total: <span id="totalInquiriesHeader" class="font-bold text-white text-sm">0</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap gap-2">
-          <button type="button" data-inq-filter="ALL" class="inq-filter-btn px-4 py-2 rounded-xl text-xs font-bold uppercase accent-bg">Todas</button>
-          <button type="button" data-inq-filter="UNREAD" class="inq-filter-btn px-4 py-2 rounded-xl text-xs font-bold uppercase bg-zinc-800 text-zinc-300">Pendientes / Nuevas</button>
-          <button type="button" data-inq-filter="READ" class="inq-filter-btn px-4 py-2 rounded-xl text-xs font-bold uppercase bg-zinc-800 text-zinc-300">Leídas</button>
-        </div>
-
-        <div id="adminInquiriesList" class="space-y-3"></div>
-      </section>
-
       <!-- MÓDULO 1: SUBIR FOTOS -->
-      <section id="tab-upload" class="admin-tab-panel hidden max-w-5xl mx-auto space-y-6">
+      <section id="tab-upload" class="admin-tab-panel max-w-5xl mx-auto space-y-6">
         <div>
-          <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Gestión de Portafolio</span>
+          <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Firebase Cloud Firestore</span>
           <h2 class="font-display text-3xl sm:text-4xl text-white mt-0.5">Subir Fotografías & Detalles</h2>
         </div>
 
         <div id="batchDropZone" class="border-2 border-dashed border-zinc-700 hover:border-[#f2b705] bg-[#141416] rounded-2xl p-8 text-center cursor-pointer transition">
           <input id="batchFileInput" type="file" accept="image/*" multiple class="hidden" />
           <h3 class="font-display text-2xl text-white">Arrastra tus fotografías aquí o haz clic</h3>
-          <p class="text-zinc-400 text-sm mt-1">Se optimizan automáticamente para cargarse rápido en la web</p>
+          <p class="text-zinc-400 text-sm mt-1">Selección múltiple en la nube con nombre individual o en conjunto</p>
           <span class="inline-block mt-4 px-5 py-2.5 rounded-xl accent-bg text-xs font-bold uppercase tracking-wider">Examinar Archivos</span>
         </div>
 
@@ -229,9 +245,10 @@
                 <h3 class="font-display text-xl text-white">Configuración de Lote</h3>
                 <p id="batchQueueCountLabel" class="text-xs text-zinc-400">0 fotos listas</p>
               </div>
-              <button id="publishBatchBtn" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 transition">Publicar Ahora</button>
+              <button id="publishBatchBtn" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 transition">Publicar en la Nube</button>
             </div>
 
+            <!-- ASIGNACIÓN EN CONJUNTO -->
             <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-[#0b0b0c] p-4 rounded-xl border border-zinc-800/90">
               <div class="md:col-span-4">
                 <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Nombre en Conjunto</label>
@@ -243,12 +260,12 @@
               </div>
               <div class="md:col-span-5">
                 <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Descripción en Conjunto</label>
-                <input id="bulkDescInput" type="text" placeholder="Descripción compartida..." class="w-full px-3.5 py-2 rounded-xl bg-[#141416] border border-zinc-800 text-sm text-white" />
+                <input id="bulkDescInput" type="text" placeholder="Descripción compartida para todo el lote..." class="w-full px-3.5 py-2 rounded-xl bg-[#141416] border border-zinc-800 text-sm text-white" />
               </div>
               <div class="md:col-span-12 flex flex-wrap items-center justify-between gap-3 pt-1">
                 <label class="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer select-none">
                   <input id="bulkNumberingCheck" type="checkbox" checked class="accent-[#f2b705] rounded" />
-                  Numerar automáticamente (#1, #2, #3...)
+                  Numerar automáticamente (#1, #2, #3...) al aplicar nombre en conjunto
                 </label>
                 <button id="applyBulkMetadataBtn" type="button" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-[#f2b705] hover:text-[#0b0b0c] text-xs font-bold uppercase tracking-wider transition">
                   Aplicar a Todas las Fotos
@@ -268,7 +285,7 @@
           <button id="deleteAllPhotosBtn" class="px-4 py-2 rounded-xl bg-red-600/20 text-red-400 text-xs font-semibold uppercase">Vaciar Galería</button>
         </div>
         <div class="bg-[#141416] border border-zinc-800 rounded-2xl p-6 space-y-4">
-          <h3 class="font-display text-xl text-white">Administrar Categorías</h3>
+          <h3 class="font-display text-xl text-white">Añadir Categoría</h3>
           <div class="flex gap-3">
             <input id="newCategoryInput" type="text" placeholder="Ej: Automotriz" class="flex-1 px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
             <button id="addCategoryBtn" class="px-5 py-2.5 rounded-xl accent-bg text-xs font-bold uppercase">Añadir</button>
@@ -287,10 +304,8 @@
           <div><label class="block text-xs text-zinc-400 mb-1">Nombre de Marca</label><input id="cfgBrandName" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
           <div><label class="block text-xs text-zinc-400 mb-1">Titular Hero</label><input id="cfgHeroTitle" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
           <div><label class="block text-xs text-zinc-400 mb-1">Título Sección Sobre Mí</label><input id="cfgAboutTitle" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
-          <div><label class="block text-xs text-zinc-400 mb-1">Identidad Profesional</label><input id="cfgAboutRole" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
-          <div><label class="block text-xs text-zinc-400 mb-1">Biografía Principal</label><textarea id="cfgAboutBio1" rows="3" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white"></textarea></div>
-          <div><label class="block text-xs text-zinc-400 mb-1">Experiencia y Servicios</label><textarea id="cfgAboutBio2" rows="3" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white"></textarea></div>
-
+          <div><label class="block text-xs text-zinc-400 mb-1">Biografía</label><textarea id="cfgAboutBio1" rows="3" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white"></textarea></div>
+          
           <div class="pt-2 border-t border-zinc-800">
             <label class="block text-xs uppercase text-zinc-400 mb-2">Fotografía de Perfil (Sobre Mí)</label>
             <div class="flex items-center gap-4">
@@ -298,7 +313,7 @@
               <input id="cfgAboutPhotoInput" type="file" accept="image/*" class="block w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#f2b705] file:text-[#0b0b0c] hover:file:brightness-110 cursor-pointer" />
             </div>
           </div>
-          <button id="saveTextsBtn" type="submit" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase">Guardar Textos y Perfil</button>
+          <button type="submit" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase">Guardar Textos y Perfil</button>
         </form>
       </section>
 
@@ -306,7 +321,7 @@
       <section id="tab-contact" class="admin-tab-panel hidden max-w-4xl mx-auto space-y-6">
         <h2 class="font-display text-3xl text-white">Contacto & Redes</h2>
         <form id="contactSettingsForm" class="bg-[#141416] border border-zinc-800 rounded-2xl p-6 space-y-4">
-          <div><label class="block text-xs text-zinc-400 mb-1">Número de WhatsApp (Ej: 18296532377)</label><input id="cfgWhatsappNumber" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
+          <div><label class="block text-xs text-zinc-400 mb-1">WhatsApp (Ej: 18296532377)</label><input id="cfgWhatsappNumber" type="text" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
           <div><label class="block text-xs text-zinc-400 mb-1">Instagram URL</label><input id="cfgInstagramUrl" type="url" class="w-full px-4 py-2.5 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" /></div>
           <button type="submit" class="px-6 py-3 rounded-xl accent-bg font-bold text-xs uppercase">Guardar Contacto</button>
         </form>
@@ -328,7 +343,7 @@
 
   <!-- LIGHTBOX -->
   <div id="lightboxModal" class="fixed inset-0 z-[9800] hidden items-center justify-center bg-black/95 backdrop-blur-md p-4">
-    <button id="lbCloseBtn" class="absolute top-5 right-5 z-20 w-11 h-11 rounded-full bg-zinc-900 text-white flex items-center justify-center hover:bg-[#f2b705] hover:text-black transition">✕</button>
+    <button id="lbCloseBtn" class="absolute top-5 right-5 z-20 w-11 h-11 rounded-full bg-zinc-900 text-white flex items-center justify-center">✕</button>
     <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-[#141416] p-6 rounded-2xl border border-zinc-800 shadow-2xl">
       <div class="flex items-center justify-center">
         <img id="lbImage" src="" alt="" class="max-h-[70vh] max-w-full object-contain rounded-xl" />
@@ -348,46 +363,31 @@
   </div>
 
   <!-- BOTÓN FLOTANTE ADMIN -->
-  <button id="floatingReturnAdminBtn" class="hidden fixed bottom-6 right-6 z-[9500] px-4 py-2.5 rounded-full accent-bg font-bold text-xs uppercase shadow-2xl flex items-center gap-2">
-    <span>Panel Admin</span>
-    <span id="floatingUnreadBadge" class="hidden px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px]">0</span>
-  </button>
+  <button id="floatingReturnAdminBtn" class="hidden fixed bottom-6 right-6 z-[9500] px-4 py-2.5 rounded-full accent-bg font-bold text-xs uppercase shadow-2xl">Panel Admin</button>
 
-  <!-- 1. PRIMERA SECCIÓN: BARRA DE NAVEGACIÓN + PORTADA PRINCIPAL -->
+  <!-- INTERFAZ PÚBLICA PRINCIPAL -->
   <header class="fixed top-0 inset-x-0 z-50 bg-[#0b0b0c]/85 backdrop-blur-md border-b border-white/5">
     <div class="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between gap-4">
-      <div id="headerLogoTrigger" class="secret-logo-trigger flex items-center gap-3" title="Doble clic para acceso administrativo">
+      <div id="headerLogoTrigger" class="secret-logo-trigger flex items-center gap-3" title="Haz doble clic rápido aquí para administrar">
         <div class="logo-aperture">
           <span class="logo-blade"></span><span class="logo-blade"></span><span class="logo-blade"></span>
           <span class="logo-blade"></span><span class="logo-blade"></span><span class="logo-blade"></span>
         </div>
         <span id="pubBrandNameHeader" class="font-display text-xl sm:text-2xl lg:text-3xl text-white tracking-wider">STREETONE | ONE SHOT PHOTOGRAPH</span>
       </div>
-
-      <nav class="hidden md:flex items-center gap-6 lg:gap-7 text-xs uppercase tracking-widest text-zinc-300">
+      <nav class="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest text-zinc-300">
         <a href="#galeria" class="hover:text-[#f2b705] transition">Galería</a>
         <a href="#agendar" class="hover:text-[#f2b705] transition accent-text font-bold">Agendar & Cotizar</a>
         <a href="#sobre-mi" class="hover:text-[#f2b705] transition">Sobre Mí</a>
         <a href="#contacto" class="hover:text-[#f2b705] transition">Contacto</a>
-        <a id="headerWhatsappBtn" href="https://wa.me/18296532377" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold transition shadow-md">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-          <span>WHATSAPP</span>
-        </a>
         <a id="headerInstagramBtn" href="https://www.instagram.com/streetone_01/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-zinc-700 hover:border-[#f2b705] hover:text-[#f2b705] transition">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
           <span>Instagram</span>
         </a>
       </nav>
-
-      <div class="flex md:hidden items-center gap-2">
-        <a id="headerWhatsappMobileBtn" href="https://wa.me/18296532377" target="_blank" rel="noopener noreferrer" aria-label="WHATSAPP" class="inline-flex items-center gap-1.5 px-3 h-10 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[11px] font-bold uppercase tracking-wider transition shadow-md">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-          <span>WHATSAPP</span>
-        </a>
-        <a id="headerInstagramMobileBtn" href="https://www.instagram.com/streetone_01/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-zinc-800 text-zinc-200 hover:border-[#f2b705] hover:text-[#f2b705] transition">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-        </a>
-      </div>
+      <a id="headerInstagramMobileBtn" href="https://www.instagram.com/streetone_01/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border border-zinc-800 text-zinc-200 hover:border-[#f2b705] hover:text-[#f2b705] transition">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      </a>
     </div>
   </header>
 
@@ -402,39 +402,7 @@
     </div>
   </section>
 
-  <!-- 2. SEGUNDA SECCIÓN: SOBRE MÍ + FOTO DE PERFIL -->
-  <section id="sobre-mi" class="py-24 bg-[#111114] border-t border-zinc-800/80 px-5">
-    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
-      <div class="md:col-span-5">
-        <div class="viewfinder-card rounded-2xl aspect-[4/5] overflow-hidden shadow-2xl">
-          <img id="pubAboutPhoto" src="assets/img/perfil.jpg" onerror="this.src='https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80'" alt="Sobre Mí" class="w-full h-full object-cover" />
-        </div>
-      </div>
-      <div class="md:col-span-7 space-y-5">
-        <span id="pubAboutRole" class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Fotógrafo Automotriz, Urbano & Comercial</span>
-        <h2 id="pubAboutTitle" class="font-display text-4xl sm:text-5xl text-white">SOBRE MÍ</h2>
-        <p id="pubAboutBio1" class="text-zinc-300 text-sm sm:text-base leading-relaxed"></p>
-        <p id="pubAboutBio2" class="text-zinc-400 text-sm leading-relaxed"></p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-          <div class="bg-[#141416] border border-zinc-800/90 p-3.5 rounded-xl">
-            <span class="accent-text font-display text-xl block">AUTOMOTRIZ</span>
-            <span class="text-[11px] text-zinc-400">Car Meets, Rollers & Detalle</span>
-          </div>
-          <div class="bg-[#141416] border border-zinc-800/90 p-3.5 rounded-xl">
-            <span class="accent-text font-display text-xl block">REAL ESTATE</span>
-            <span class="text-[11px] text-zinc-400">Arquitectura & Reels</span>
-          </div>
-          <div class="bg-[#141416] border border-zinc-800/90 p-3.5 rounded-xl col-span-2 sm:col-span-1">
-            <span class="accent-text font-display text-xl block">LIFESTYLE</span>
-            <span class="text-[11px] text-zinc-400">Retratos & Eventos</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3. TERCERA SECCIÓN: PORTAFOLIO VISUAL Y CATEGORÍAS -->
-  <section id="galeria" class="py-24 max-w-7xl mx-auto px-5 border-t border-zinc-800/80">
+  <section id="galeria" class="py-24 max-w-7xl mx-auto px-5">
     <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
       <div>
         <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Portafolio Visual</span>
@@ -443,6 +411,7 @@
       <div id="publicCategoryFilters" class="flex flex-wrap gap-2.5"></div>
     </div>
 
+    <!-- CONTROLES DEL CARRUSEL POR CATEGORÍA -->
     <div id="categoryCarouselControls" class="hidden items-center justify-between mb-4 bg-[#141416] border border-zinc-800/80 px-4 py-2.5 rounded-xl">
       <div class="flex items-center gap-2.5">
         <span class="w-2 h-2 rounded-full accent-bg animate-pulse"></span>
@@ -460,95 +429,729 @@
     </div>
   </section>
 
-  <!-- 4. CUARTA SECCIÓN: AGENDA Y CONSULTAS DE INFORMACIÓN -->
+  <!-- SECCIÓN DE AGENDA DE CITA & COTIZACIÓN (WHATSAPP BUSINESS) -->
   <section id="agendar" class="py-24 bg-[#111114] border-t border-zinc-800/80 px-5">
     <div class="max-w-3xl mx-auto space-y-10">
       <div class="text-center space-y-3">
         <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Reserva y Presupuesto Directo</span>
-        <h2 class="font-display text-4xl sm:text-5xl text-white">AGENDA TU CITA & CONSULTA INFORMACIÓN</h2>
-        <p class="text-zinc-400 text-sm max-w-xl mx-auto">Completa los detalles de tu proyecto o sesión fotográfica. Tu solicitud quedará registrada inmediatamente en nuestro sistema.</p>
+        <h2 class="font-display text-4xl sm:text-5xl text-white">AGENDA TU CITA & COTIZACIÓN</h2>
+        <p class="text-zinc-400 text-sm max-w-xl mx-auto">Completa los detalles de tu proyecto o sesión fotográfica. Al enviar, recibirás atención inmediata en nuestro WhatsApp Business.</p>
       </div>
 
-      <form id="publicInquiryForm" class="bg-[#141416] border border-zinc-800 rounded-3xl p-6 sm:p-10 space-y-6 shadow-2xl" novalidate>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <form id="whatsappBookingForm" class="bg-[#141416] border border-zinc-800 rounded-3xl p-6 sm:p-10 space-y-6 shadow-2xl">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label for="inqFullName" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Nombre Completo *</label>
-            <input id="inqFullName" type="text" required minlength="2" placeholder="Ej: Carlos Pérez" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
+            <label class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Tu Nombre o Empresa *</label>
+            <input id="bookName" type="text" required placeholder="Ej: Carlos Pérez" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
           </div>
           <div>
-            <label for="inqPhone" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Número de Contacto *</label>
-            <input id="inqPhone" type="tel" required minlength="7" placeholder="Ej: 829 000 0000" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
-          </div>
-          <div>
-            <label for="inqEmail" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Correo Electrónico *</label>
-            <input id="inqEmail" type="email" required placeholder="cliente@correo.com" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
+            <label class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Número de WhatsApp *</label>
+            <input id="bookPhone" type="tel" required placeholder="Ej: 829 000 0000" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div>
-            <label for="inqService" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Tipo de Servicio Fotográfico *</label>
-            <select id="inqService" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition">
-              <option value="Sesión Automotriz / Car Meet">Sesión Automotriz / Car Meet</option>
-              <option value="Fotografía Real Estate / Inmobiliaria">Fotografía Real Estate / Inmobiliaria</option>
-              <option value="Retratos & Lifestyle">Retratos & Lifestyle</option>
-              <option value="Cobertura de Evento Comercial">Cobertura de Evento Comercial</option>
-              <option value="Consulta General / Otro Proyecto">Consulta General / Otro Proyecto</option>
+            <label class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Tipo de Servicio *</label>
+            <select id="bookService" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition">
+              <option value="Sesión Automotriz / Car Meet">🚗 Sesión Automotriz</option>
+              <option value="Fotografía Real Estate / Inmobiliaria">🏠 Real Estate / Inmobiliaria</option>
+              <option value="Retratos & Lifestyle">👤 Retratos & Lifestyle</option>
+              <option value="Cobertura de Evento Comercial">🎥 Evento / Comercial</option>
+              <option value="Otro Proyecto Personalizado">✨ Otro Proyecto</option>
             </select>
           </div>
           <div>
-            <label for="inqDate" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Fecha de Interés (Opcional)</label>
-            <input id="inqDate" type="date" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
+            <label class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Fecha Estimada *</label>
+            <input id="bookDate" type="date" required class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition" />
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Hora Preferida *</label>
+            <select id="bookTime" class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition">
+              <option value="Mañana (9:00 AM - 12:00 PM)">Mañana (9:00 AM)</option>
+              <option value="Tarde (2:00 PM - 5:00 PM)">Tarde (2:00 PM)</option>
+              <option value="Atardecer / Golden Hour (5:00 PM - 7:00 PM)">Golden Hour (5:00 PM)</option>
+              <option value="Nocturna / Night Meet">Nocturna / Night Meet</option>
+            </select>
           </div>
         </div>
 
         <div>
-          <label for="inqMessage" class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Mensaje o Descripción de la Solicitud *</label>
-          <textarea id="inqMessage" rows="4" required minlength="5" placeholder="Cuéntanos sobre tu vehículo, propiedad, evento, ubicación o tipo de sesión que deseas..." class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition"></textarea>
+          <label class="block text-xs uppercase tracking-wider text-zinc-300 mb-2">Detalles, Ubicación o Requerimientos de la Cotización</label>
+          <textarea id="bookNotes" rows="3" placeholder="Ej: Necesito cobertura para un Honda Civic EK en San Juan, fotos exteriores y reels para Instagram..." class="w-full px-4 py-3 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white focus:border-[#f2b705] outline-none transition"></textarea>
         </div>
 
-        <div id="inquiryFeedbackBox" class="hidden p-4 rounded-xl text-xs font-medium leading-relaxed"></div>
-
-        <div class="flex flex-col sm:flex-row gap-3">
-          <button id="submitInquiryBtn" type="submit" class="flex-1 py-4 rounded-xl accent-bg font-bold text-xs uppercase tracking-widest shadow-xl hover:brightness-110 transition">
-            Enviar Solicitud de Consulta
-          </button>
-          <button id="sendAndWhatsappBtn" type="button" class="px-6 py-4 rounded-xl bg-[#25D366]/15 border border-[#25D366]/50 text-[#25D366] hover:bg-[#25D366] hover:text-white font-bold text-xs uppercase tracking-wider transition">
-            Enviar + Abrir WhatsApp
-          </button>
-        </div>
+        <button type="submit" class="w-full py-4 rounded-xl accent-bg font-bold text-xs uppercase tracking-widest shadow-xl hover:brightness-110 transition flex items-center justify-center gap-2">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+          <span>Enviar Solicitud a WhatsApp Business</span>
+        </button>
       </form>
     </div>
   </section>
 
-  <!-- 5. QUINTA SECCIÓN: REDES SOCIALES Y CONTACTO -->
+  <section id="sobre-mi" class="py-24 bg-[#111114] border-t border-zinc-800/80 px-5">
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div class="viewfinder-card rounded-2xl aspect-[4/5] overflow-hidden">
+        <img id="pubAboutPhoto" src="" alt="Sobre Mí" class="w-full h-full object-cover" />
+      </div>
+      <div class="space-y-5">
+        <span class="text-xs uppercase tracking-[0.2em] accent-text font-semibold">Fotógrafo Profesional</span>
+        <h2 id="pubAboutTitle" class="font-display text-4xl text-white">SOBRE MÍ</h2>
+        <p id="pubAboutBio1" class="text-zinc-300 text-sm leading-relaxed"></p>
+        <p id="pubAboutBio2" class="text-zinc-400 text-sm leading-relaxed"></p>
+      </div>
+    </div>
+  </section>
+
   <section id="contacto" class="py-20 border-t border-zinc-800/80 text-center px-5">
     <div class="max-w-2xl mx-auto space-y-6">
       <h2 class="font-display text-4xl text-white">¿Listo para trabajar juntos?</h2>
-      <p class="text-zinc-400 text-sm">Contáctanos directamente a través de nuestras plataformas oficiales.</p>
+      <p class="text-zinc-400 text-sm">Reserva tu sesión o cotiza proyectos automotrices y comerciales.</p>
       <div class="flex flex-wrap justify-center gap-4">
-        <a id="pubWhatsappBtn" href="https://wa.me/18296532377" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-7 py-4 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-xs uppercase tracking-wider shadow-lg transition">
-          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-          <span>WHATSAPP</span>
-        </a>
-        <a id="pubInstagramBtn" href="https://www.instagram.com/streetone_01/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-7 py-4 rounded-xl bg-[#141416] border border-zinc-700 hover:border-[#f2b705] text-white hover:text-[#f2b705] font-bold text-xs uppercase tracking-wider shadow-lg transition">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-          <span>INSTAGRAM</span>
+        <a id="pubWhatsappBtn" href="#" target="_blank" rel="noopener noreferrer" class="px-6 py-3.5 rounded-xl accent-bg font-bold text-xs uppercase tracking-wider shadow-lg">WhatsApp Directo</a>
+        <a id="pubInstagramBtn" href="https://www.instagram.com/streetone_01/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#141416] border border-zinc-700 hover:border-[#f2b705] text-white hover:text-[#f2b705] font-bold text-xs uppercase tracking-wider shadow-lg transition">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          <span>Instagram @streetone_01</span>
         </a>
       </div>
     </div>
   </section>
 
-  <!-- 6. SEXTA SECCIÓN: PIE DE PÁGINA -->
-  <footer class="py-10 bg-[#080809] border-t border-zinc-900 text-center px-5">
-    <div class="max-w-7xl mx-auto space-y-2">
-      <p class="text-xs text-zinc-400 tracking-widest uppercase">
-        © <span id="currentCopyrightYear">2026</span> <span id="footerBrandName" class="text-white font-semibold">STREETONE | ONE SHOT PHOTOGRAPH</span>. Todos los derechos reservados.
-      </p>
-      <p class="text-[11px] text-zinc-600">Fotografía Automotriz, Urbana & Comercial</p>
-    </div>
-  </footer>
+  <!-- LÓGICA DE FIREBASE Y CLIENTE -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  <script src="js/app.js"></script>
+    // Reemplaza esto con los datos de tu consola de Firebase
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "tu-proyecto.firebaseapp.com",
+      projectId: "tu-proyecto-id",
+      storageBucket: "tu-proyecto.appspot.com",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let siteConfig = {
+      brandName: 'STREETONE | ONE SHOT PHOTOGRAPH',
+      heroTitle: 'CAPTURANDO HISTORIAS EN CADA DISPARO',
+      aboutTitle: 'SOBRE MÍ',
+      aboutBio1: 'Especialista en fotografía automotriz, urbana y comercial, capturando la esencia y el movimiento en cada encuadre.',
+      aboutBio2: 'Comprometido con la perfección visual y el detalle técnico en cada proyecto.',
+      aboutPhoto: '',
+      whatsappNumber: '18296532377',
+      instagramUrl: 'https://www.instagram.com/streetone_01/',
+      categories: ['Urbano', 'Retratos', 'Automóviles', 'Lifestyle'],
+      theme: { accentColor: '#f2b705' }
+    };
+    let photosList = [];
+    let cloudAdminRecord = null;
+    let batchQueue = [];
+    let selectedPublicCategory = 'ALL';
+    let isAdminAuthenticated = sessionStorage.getItem('oneshot_session') === 'true';
+
+    // Variables del Carrusel Animado
+    let carouselInterval = null;
+    let isCarouselPaused = false;
+
+    function showToast(msg) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'bg-[#141416] border border-[#f2b705]/40 text-white p-3 rounded-xl text-xs shadow-xl';
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    async function sha256Hex(text) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function loadDataFromFirebase() {
+      try {
+        const configSnap = await getDocs(collection(db, "site_config"));
+        configSnap.forEach(d => {
+          if (d.id === 'main') {
+            const loaded = d.data();
+            if (loaded.brandName === 'Street One') {
+              loaded.brandName = 'STREETONE | ONE SHOT PHOTOGRAPH';
+            }
+            siteConfig = { ...siteConfig, ...loaded };
+          }
+          if (d.id === 'admin') cloudAdminRecord = d.data();
+        });
+
+        const photosSnap = await getDocs(collection(db, "photos"));
+        photosList = [];
+        photosSnap.forEach(d => {
+          photosList.push({ id: d.id, ...d.data() });
+        });
+        photosList.sort((a, b) => b.createdAt - a.createdAt);
+
+        renderPublicSite();
+        if (isAdminAuthenticated) populateAdmin();
+      } catch (e) {
+        console.error("Error cargando desde Firebase:", e);
+        renderPublicSite();
+      }
+    }
+
+    function stopCategoryCarousel() {
+      if (carouselInterval) {
+        clearInterval(carouselInterval);
+        carouselInterval = null;
+      }
+    }
+
+    function startCategoryCarousel(viewportEl) {
+      stopCategoryCarousel();
+      if (!viewportEl) return;
+
+      carouselInterval = setInterval(() => {
+        if (isCarouselPaused) return;
+        const maxScroll = viewportEl.scrollWidth - viewportEl.clientWidth;
+        if (maxScroll <= 0) return;
+
+        if (viewportEl.scrollLeft + 360 >= maxScroll - 5) {
+          viewportEl.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          viewportEl.scrollBy({ left: 360, behavior: 'smooth' });
+        }
+      }, 2800);
+    }
+
+    function openPhotoLightbox(photo) {
+      document.getElementById('lbImage').src = photo.dataUrl;
+      document.getElementById('lbCategory').textContent = photo.category;
+      document.getElementById('lbTitle').textContent = photo.title;
+      document.getElementById('lbMeta').textContent = photo.location ? `📍 ${photo.location}` : '';
+      document.getElementById('lbDescription').textContent = photo.description || 'Sin descripción adicional.';
+      document.getElementById('lightboxModal').classList.remove('hidden');
+      document.getElementById('lightboxModal').classList.add('flex');
+    }
+
+    function createPhotoCardElement(photo, index, isCarousel = false) {
+      const card = document.createElement('div');
+      card.className = `viewfinder-card rounded-xl cursor-pointer aspect-[4/5] shadow-lg ${isCarousel ? 'carousel-slide-card' : 'animate-fade-up'}`;
+      if (isCarousel) {
+        card.style.animationDelay = `${Math.min(index * 80, 600)}ms`;
+      }
+      card.innerHTML = `
+        <div class="viewfinder-corner"></div>
+        <img src="${photo.dataUrl}" alt="${photo.title}" class="w-full h-full object-cover transition duration-500 hover:scale-105" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 hover:opacity-100 transition duration-300 flex flex-col justify-end p-5">
+          <span class="text-[11px] uppercase tracking-widest accent-text font-semibold">${photo.category}</span>
+          <h3 class="font-display text-2xl text-white">${photo.title}</h3>
+          ${photo.location ? `<p class="text-xs text-zinc-300 mt-0.5">📍 ${photo.location}</p>` : ''}
+          ${photo.description ? `<p class="text-xs text-zinc-400 mt-1 line-clamp-2">${photo.description}</p>` : ''}
+        </div>
+      `;
+      card.onclick = () => openPhotoLightbox(photo);
+      return card;
+    }
+
+    function renderPublicSite() {
+      document.getElementById('pubBrandNameHeader').textContent = siteConfig.brandName;
+      document.getElementById('pubHeroTitle').textContent = siteConfig.heroTitle;
+      document.getElementById('pubAboutTitle').textContent = siteConfig.aboutTitle;
+      document.getElementById('pubAboutBio1').textContent = siteConfig.aboutBio1;
+      document.getElementById('pubAboutBio2').textContent = siteConfig.aboutBio2;
+      document.getElementById('pubAboutPhoto').src = siteConfig.aboutPhoto || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80';
+      document.getElementById('pubWhatsappBtn').href = `https://wa.me/${siteConfig.whatsappNumber}`;
+
+      const igUrl = siteConfig.instagramUrl || 'https://www.instagram.com/streetone_01/';
+      document.getElementById('pubInstagramBtn').href = igUrl;
+      document.getElementById('headerInstagramBtn').href = igUrl;
+      document.getElementById('headerInstagramMobileBtn').href = igUrl;
+
+      document.documentElement.style.setProperty('--accent-color', siteConfig.theme?.accentColor || '#f2b705');
+
+      const filtersContainer = document.getElementById('publicCategoryFilters');
+      let filtersHtml = `<button onclick="setPublicCategory('ALL')" class="px-4 py-2 rounded-xl text-xs font-semibold uppercase transition ${selectedPublicCategory === 'ALL' ? 'accent-bg' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}">Todas</button>`;
+      siteConfig.categories.forEach(cat => {
+        filtersHtml += `<button onclick="setPublicCategory('${cat}')" class="px-4 py-2 rounded-xl text-xs font-semibold uppercase transition ${selectedPublicCategory === cat ? 'accent-bg' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}">${cat}</button>`;
+      });
+      filtersContainer.innerHTML = filtersHtml;
+
+      const galleryContainer = document.getElementById('publicGalleryContainer');
+      const controlsEl = document.getElementById('categoryCarouselControls');
+      stopCategoryCarousel();
+      galleryContainer.innerHTML = '';
+
+      const filteredPhotos = selectedPublicCategory === 'ALL'
+        ? photosList
+        : photosList.filter(p => p.category === selectedPublicCategory);
+
+      if (filteredPhotos.length === 0) {
+        controlsEl.classList.add('hidden');
+        controlsEl.classList.remove('flex');
+        galleryContainer.innerHTML = `<div class="py-16 text-center text-zinc-500 text-sm">No hay fotografías publicadas en esta categoría.</div>`;
+        return;
+      }
+
+      if (selectedPublicCategory !== 'ALL') {
+        controlsEl.classList.remove('hidden');
+        controlsEl.classList.add('flex');
+        document.getElementById('carouselActiveLabel').textContent = `Categoría: ${selectedPublicCategory} (${filteredPhotos.length} fotos)`;
+
+        const viewport = document.createElement('div');
+        viewport.className = 'category-carousel-viewport';
+        const track = document.createElement('div');
+        track.className = 'category-carousel-track';
+
+        filteredPhotos.forEach((photo, idx) => {
+          track.appendChild(createPhotoCardElement(photo, idx, true));
+        });
+
+        viewport.appendChild(track);
+        galleryContainer.appendChild(viewport);
+
+        viewport.addEventListener('mouseenter', () => { isCarouselPaused = true; });
+        viewport.addEventListener('mouseleave', () => { isCarouselPaused = false; });
+
+        document.getElementById('carouselPrevBtn').onclick = () => {
+          viewport.scrollBy({ left: -360, behavior: 'smooth' });
+        };
+        document.getElementById('carouselNextBtn').onclick = () => {
+          viewport.scrollBy({ left: 360, behavior: 'smooth' });
+        };
+        const playPauseBtn = document.getElementById('carouselPlayPauseBtn');
+        isCarouselPaused = false;
+        playPauseBtn.textContent = 'Pausar';
+        playPauseBtn.onclick = () => {
+          isCarouselPaused = !isCarouselPaused;
+          playPauseBtn.textContent = isCarouselPaused ? 'Reanudar' : 'Pausar';
+        };
+
+        startCategoryCarousel(viewport);
+      } else {
+        controlsEl.classList.add('hidden');
+        controlsEl.classList.remove('flex');
+        const grid = document.createElement('div');
+        grid.id = 'publicGalleryGrid';
+        grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7';
+        filteredPhotos.forEach((photo, idx) => {
+          grid.appendChild(createPhotoCardElement(photo, idx, false));
+        });
+        galleryContainer.appendChild(grid);
+      }
+    }
+
+    window.setPublicCategory = function(cat) {
+      selectedPublicCategory = cat;
+      renderPublicSite();
+    };
+
+    // LÓGICA DEL FORMULARIO DE AGENDA & COTIZACIÓN HACIA WHATSAPP BUSINESS
+    document.getElementById('whatsappBookingForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('bookName').value.trim();
+      const phone = document.getElementById('bookPhone').value.trim();
+      const service = document.getElementById('bookService').value;
+      const date = document.getElementById('bookDate').value;
+      const time = document.getElementById('bookTime').value;
+      const notes = document.getElementById('bookNotes').value.trim();
+
+      const message = `¡Hola! 👋 Me gustaría agendar una cita o solicitar una cotización en *STREETONE | ONE SHOT PHOTOGRAPH*:%0n%0n` +
+                      `👤 *Cliente:* ${encodeURIComponent(name)}%0n` +
+                      `📱 *Teléfono:* ${encodeURIComponent(phone)}%0n` +
+                      `📷 *Servicio:* ${encodeURIComponent(service)}%0n` +
+                      `📅 *Fecha:* ${encodeURIComponent(date)}%0n` +
+                      `⏰ *Hora:* ${encodeURIComponent(time)}%0n` +
+                      (notes ? `📝 *Detalles:* ${encodeURIComponent(notes)}%0n` : '') +
+                      `%0nEspero su confirmación. ¡Gracias!`;
+
+      const whatsappUrl = `https://wa.me/${siteConfig.whatsappNumber}?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+      showToast('¡Redirigiendo a WhatsApp Business con tu solicitud!');
+    });
+
+    // Doble clic en logo
+    function openAuthModal() {
+      const modal = document.getElementById('authModal');
+      const checking = document.getElementById('authCheckingState');
+      const reg = document.getElementById('registerAdminForm');
+      const log = document.getElementById('loginAdminForm');
+
+      checking.classList.add('hidden');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      if (!cloudAdminRecord) {
+        reg.classList.remove('hidden');
+        log.classList.add('hidden');
+      } else {
+        reg.classList.add('hidden');
+        log.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('closeAuthModalBtn').addEventListener('click', () => {
+      document.getElementById('authModal').classList.add('hidden');
+      document.getElementById('authModal').classList.remove('flex');
+    });
+
+    document.getElementById('headerLogoTrigger').addEventListener('dblclick', openAuthModal);
+
+    document.getElementById('registerAdminForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = document.getElementById('regUsername').value.trim();
+      const pass = document.getElementById('regPassword').value;
+      const salt = Math.random().toString(36).substring(2);
+      const passwordHash = await sha256Hex(`${salt}:${pass}`);
+
+      await setDoc(doc(db, "site_config", "admin"), { username: user, passwordHash, salt });
+      cloudAdminRecord = { username: user, passwordHash, salt };
+      isAdminAuthenticated = true;
+      sessionStorage.setItem('oneshot_session', 'true');
+      showToast('¡Administrador registrado en Firebase!');
+      document.getElementById('authModal').classList.add('hidden');
+      openDashboard();
+    });
+
+    document.getElementById('loginAdminForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = document.getElementById('loginUsername').value.trim();
+      const pass = document.getElementById('loginPassword').value;
+      const computed = await sha256Hex(`${cloudAdminRecord.salt}:${pass}`);
+
+      if (user === cloudAdminRecord.username && computed === cloudAdminRecord.passwordHash) {
+        isAdminAuthenticated = true;
+        sessionStorage.setItem('oneshot_session', 'true');
+        showToast('Bienvenido al panel');
+        document.getElementById('authModal').classList.add('hidden');
+        openDashboard();
+      } else {
+        document.getElementById('loginErrorMsg').textContent = 'Credenciales incorrectas';
+        document.getElementById('loginErrorMsg').classList.remove('hidden');
+      }
+    });
+
+    function openDashboard() {
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      document.getElementById('adminDashboard').classList.add('flex');
+      populateAdmin();
+    }
+
+    document.getElementById('minimizeAdminBtn').addEventListener('click', () => {
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('floatingReturnAdminBtn').classList.remove('hidden');
+    });
+    document.getElementById('minimizeAdminBtnDesktop').addEventListener('click', () => {
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('floatingReturnAdminBtn').classList.remove('hidden');
+    });
+    document.getElementById('floatingReturnAdminBtn').addEventListener('click', () => {
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      document.getElementById('adminDashboard').classList.add('flex');
+      document.getElementById('floatingReturnAdminBtn').classList.add('hidden');
+    });
+    document.getElementById('logoutAdminBtn').addEventListener('click', () => {
+      isAdminAuthenticated = false;
+      sessionStorage.removeItem('oneshot_session');
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('floatingReturnAdminBtn').classList.add('hidden');
+      showToast('Sesión cerrada');
+    });
+
+    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('bg-[#f2b705]', 'text-[#0b0b0c]'));
+        btn.classList.add('bg-[#f2b705]', 'text-[#0b0b0c]');
+        document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById(`tab-${btn.getAttribute('data-admin-tab')}`).classList.remove('hidden');
+      });
+    });
+
+    // Subida por lotes
+    const dropZone = document.getElementById('batchDropZone');
+    const fileInput = document.getElementById('batchFileInput');
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      batchQueue = [];
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+      let loadedCount = 0;
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          batchQueue.push({
+            id: 'photo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+            title: file.name.replace(/\.[^/.]+$/, ''),
+            category: siteConfig.categories[0] || 'Urbano',
+            location: '',
+            description: '',
+            dataUrl: evt.target.result,
+            createdAt: Date.now() + loadedCount
+          });
+          loadedCount++;
+          if (loadedCount === files.length) renderBatchQueue();
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    document.getElementById('applyBulkMetadataBtn').addEventListener('click', () => {
+      if (batchQueue.length === 0) return;
+      const bulkTitle = document.getElementById('bulkTitleInput').value.trim();
+      const bulkCategory = document.getElementById('bulkCategorySelect').value;
+      const bulkDesc = document.getElementById('bulkDescInput').value.trim();
+      const useNumbering = document.getElementById('bulkNumberingCheck').checked;
+
+      batchQueue.forEach((item, index) => {
+        if (bulkTitle) {
+          item.title = useNumbering && batchQueue.length > 1 ? `${bulkTitle} #${index + 1}` : bulkTitle;
+        }
+        if (bulkCategory) {
+          item.category = bulkCategory;
+        }
+        if (bulkDesc) {
+          item.description = bulkDesc;
+        }
+      });
+
+      renderBatchQueue();
+      showToast('Datos en conjunto aplicados a todas las fotos');
+    });
+
+    function renderBatchQueue() {
+      const container = document.getElementById('batchItemsContainer');
+      const controlsBar = document.getElementById('batchControlsBar');
+      const bulkCategorySelect = document.getElementById('bulkCategorySelect');
+
+      bulkCategorySelect.innerHTML = siteConfig.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      container.innerHTML = '';
+
+      if (batchQueue.length > 0) {
+        controlsBar.classList.remove('hidden');
+        document.getElementById('batchQueueCountLabel').textContent = `${batchQueue.length} foto(s) lista(s)`;
+      } else {
+        controlsBar.classList.add('hidden');
+        return;
+      }
+
+      batchQueue.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'bg-[#141416] border border-zinc-800 rounded-2xl p-5 flex flex-col md:flex-row gap-5 items-start';
+        div.innerHTML = `
+          <img src="${item.dataUrl}" class="w-full md:w-36 h-36 object-cover rounded-xl border border-zinc-800 shrink-0" />
+          <div class="flex-1 w-full space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Nombre Individual</label>
+                <input type="text" value="${item.title}" oninput="updateBatchItem(${index}, 'title', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Categoría</label>
+                <select onchange="updateBatchItem(${index}, 'category', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white">
+                  ${siteConfig.categories.map(c => `<option value="${c}" ${c === item.category ? 'selected' : ''}>${c}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Ubicación</label>
+                <input type="text" value="${item.location}" placeholder="Ej: San Juan" oninput="updateBatchItem(${index}, 'location', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1">Descripción de la Foto</label>
+              <textarea rows="2" placeholder="Describe la toma, cámara, lente o historia..." oninput="updateBatchItem(${index}, 'description', this.value)" class="w-full px-3.5 py-2 rounded-xl bg-[#0b0b0c] border border-zinc-800 text-sm text-white">${item.description}</textarea>
+            </div>
+            <div class="flex justify-end">
+              <button type="button" onclick="removeBatchItem(${index})" class="text-xs text-red-400 hover:text-red-300">Quitar</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    window.updateBatchItem = (i, f, v) => { batchQueue[i][f] = v; };
+    window.removeBatchItem = (i) => { batchQueue.splice(i, 1); renderBatchQueue(); };
+
+    document.getElementById('publishBatchBtn').addEventListener('click', async () => {
+      for (const p of batchQueue) {
+        await setDoc(doc(db, "photos", p.id), p);
+      }
+      batchQueue = [];
+      document.getElementById('batchControlsBar').classList.add('hidden');
+      loadDataFromFirebase();
+      showToast('¡Publicado en Firebase!');
+    });
+
+    function populateAdmin() {
+      document.getElementById('cfgBrandName').value = siteConfig.brandName;
+      document.getElementById('cfgHeroTitle').value = siteConfig.heroTitle;
+      document.getElementById('cfgAboutTitle').value = siteConfig.aboutTitle;
+      document.getElementById('cfgAboutBio1').value = siteConfig.aboutBio1;
+      document.getElementById('adminAboutPreview').src = siteConfig.aboutPhoto || '';
+      document.getElementById('cfgWhatsappNumber').value = siteConfig.whatsappNumber;
+      document.getElementById('cfgInstagramUrl').value = siteConfig.instagramUrl || 'https://www.instagram.com/streetone_01/';
+      document.getElementById('cfgAccentColor').value = siteConfig.theme?.accentColor || '#f2b705';
+
+      renderAdminGallery();
+      renderAdminCategories();
+    }
+
+    function renderAdminGallery() {
+      const grid = document.getElementById('adminGalleryGrid');
+      grid.innerHTML = '';
+      photosList.forEach(photo => {
+        const div = document.createElement('div');
+        div.className = 'bg-[#0b0b0c] border border-zinc-800 rounded-xl p-3 flex flex-col justify-between';
+        div.innerHTML = `
+          <div>
+            <img src="${photo.dataUrl}" class="w-full h-28 object-cover rounded-lg mb-2"/>
+            <h4 class="text-xs text-white font-semibold truncate">${photo.title}</h4>
+            <span class="text-[10px] accent-text uppercase tracking-wider block">${photo.category}</span>
+            ${photo.description ? `<p class="text-[11px] text-zinc-400 mt-1 line-clamp-2">${photo.description}</p>` : ''}
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button onclick="openEditPhoto('${photo.id}')" class="w-full py-1.5 bg-zinc-800 text-zinc-200 text-xs rounded-lg hover:bg-[#f2b705] hover:text-[#0b0b0c] transition">Editar</button>
+            <button onclick="deletePhoto('${photo.id}')" class="w-full py-1.5 bg-red-500/20 text-red-400 text-xs rounded-lg hover:bg-red-600 hover:text-white transition">Borrar</button>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    window.openEditPhoto = (id) => {
+      const photo = photosList.find(p => p.id === id);
+      if (!photo) return;
+      document.getElementById('editPhotoId').value = photo.id;
+      document.getElementById('editPhotoTitle').value = photo.title || '';
+      document.getElementById('editPhotoLocation').value = photo.location || '';
+      document.getElementById('editPhotoDesc').value = photo.description || '';
+
+      const catSelect = document.getElementById('editPhotoCategory');
+      catSelect.innerHTML = siteConfig.categories.map(c => `<option value="${c}" ${c === photo.category ? 'selected' : ''}>${c}</option>`).join('');
+
+      document.getElementById('editPhotoModal').classList.remove('hidden');
+      document.getElementById('editPhotoModal').classList.add('flex');
+    };
+
+    document.getElementById('cancelEditPhotoBtn').addEventListener('click', () => {
+      document.getElementById('editPhotoModal').classList.add('hidden');
+      document.getElementById('editPhotoModal').classList.remove('flex');
+    });
+
+    document.getElementById('saveEditPhotoBtn').addEventListener('click', async () => {
+      const id = document.getElementById('editPhotoId').value;
+      const photo = photosList.find(p => p.id === id);
+      if (!photo) return;
+
+      const updatedPhoto = {
+        ...photo,
+        title: document.getElementById('editPhotoTitle').value.trim() || photo.title,
+        category: document.getElementById('editPhotoCategory').value,
+        location: document.getElementById('editPhotoLocation').value.trim(),
+        description: document.getElementById('editPhotoDesc').value.trim()
+      };
+
+      await setDoc(doc(db, "photos", id), updatedPhoto);
+      document.getElementById('editPhotoModal').classList.add('hidden');
+      document.getElementById('editPhotoModal').classList.remove('flex');
+      loadDataFromFirebase();
+      showToast('Fotografía actualizada');
+    });
+
+    window.deletePhoto = async (id) => {
+      await deleteDoc(doc(db, "photos", id));
+      loadDataFromFirebase();
+      showToast('Foto eliminada');
+    };
+
+    function renderAdminCategories() {
+      const list = document.getElementById('adminCategoriesList');
+      list.innerHTML = siteConfig.categories.map(c => `<span class="px-3 py-1 bg-zinc-800 text-xs text-white rounded-lg">${c}</span>`).join('');
+    }
+
+    document.getElementById('textsSettingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      siteConfig.brandName = document.getElementById('cfgBrandName').value;
+      siteConfig.heroTitle = document.getElementById('cfgHeroTitle').value;
+      siteConfig.aboutTitle = document.getElementById('cfgAboutTitle').value;
+      siteConfig.aboutBio1 = document.getElementById('cfgAboutBio1').value;
+
+      const fileInput = document.getElementById('cfgAboutPhotoInput');
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+          siteConfig.aboutPhoto = evt.target.result;
+          await setDoc(doc(db, "site_config", "main"), siteConfig);
+          loadDataFromFirebase();
+          showToast('Textos y perfil guardados');
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        await setDoc(doc(db, "site_config", "main"), siteConfig);
+        loadDataFromFirebase();
+        showToast('Textos guardados');
+      }
+    });
+
+    document.getElementById('contactSettingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      siteConfig.whatsappNumber = document.getElementById('cfgWhatsappNumber').value;
+      siteConfig.instagramUrl = document.getElementById('cfgInstagramUrl').value;
+      await setDoc(doc(db, "site_config", "main"), siteConfig);
+      loadDataFromFirebase();
+      showToast('Contacto guardado');
+    });
+
+    document.getElementById('appearanceSettingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      siteConfig.theme.accentColor = document.getElementById('cfgAccentColor').value;
+      await setDoc(doc(db, "site_config", "main"), siteConfig);
+      loadDataFromFirebase();
+      showToast('Apariencia actualizada');
+    });
+
+    document.getElementById('addCategoryBtn').addEventListener('click', async () => {
+      const val = document.getElementById('newCategoryInput').value.trim();
+      if (val && !siteConfig.categories.includes(val)) {
+        siteConfig.categories.push(val);
+        document.getElementById('newCategoryInput').value = '';
+        await setDoc(doc(db, "site_config", "main"), siteConfig);
+        loadDataFromFirebase();
+        showToast('Categoría añadida');
+      }
+    });
+
+    document.getElementById('deleteAllPhotosBtn').addEventListener('click', () => {
+      document.getElementById('confirmModal').classList.remove('hidden');
+      document.getElementById('confirmModal').classList.add('flex');
+      document.getElementById('confirmTitle').textContent = 'Vaciar Galería';
+      document.getElementById('confirmMessage').textContent = '¿Borrar todas las fotos de Firebase?';
+      
+      document.getElementById('confirmAcceptBtn').onclick = async () => {
+        for (const p of photosList) {
+          await deleteDoc(doc(db, "photos", p.id));
+        }
+        document.getElementById('confirmModal').classList.add('hidden');
+        document.getElementById('confirmModal').classList.remove('flex');
+        loadDataFromFirebase();
+        showToast('Galería vaciada');
+      };
+    });
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', () => {
+      document.getElementById('confirmModal').classList.add('hidden');
+      document.getElementById('confirmModal').classList.remove('flex');
+    });
+
+    document.getElementById('lbCloseBtn').addEventListener('click', () => {
+      document.getElementById('lightboxModal').classList.add('hidden');
+      document.getElementById('lightboxModal').classList.remove('flex');
+    });
+
+    loadDataFromFirebase();
+  </script>
 </body>
 </html>
